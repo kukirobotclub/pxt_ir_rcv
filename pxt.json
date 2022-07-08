@@ -11,7 +11,9 @@
         "ir.cpp",
         "ReceiverIR.cpp",
         "ReceiverIR.h",
-        "RemoteIR.h"
+        "RemoteIR.h",
+        "TransmitterIR.cpp",
+        "TransmitterIR.h"
     ],
     "public": true
 }
