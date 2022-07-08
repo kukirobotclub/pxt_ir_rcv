@@ -3,7 +3,6 @@
 #include <vector>
 #include "ReceiverIR.h"
 using namespace pxt;
-typedef vector<Action> vA;
 
 enum class Pins{
   P0=  3,
@@ -27,79 +26,53 @@ enum class Pins{
   P20= 30
 };
 
-enum class RemoteButton {
-    CH_MINUS = 0x45,
-	  CH = 0x46,
-	  CH_Add = 0x47,
-	  PREV = 0x44,
-	  PLAY = 0x43,
-	  NUM_200 = 0xd,
-	  NEXT = 0x40,
-	  NUM_100 = 0x19,
-	  Minus = 0x7,
-	  Add = 0x15,
-	  EQ = 0x9,
-	  NUM0 = 0x16,
-	  NUM1 = 0xc,
-	  NUM2 = 0x18,
-	  NUM3 = 0x5e,
-	  NUM4 = 0x8,
-	  NUM5 = 0x1c,
-	  NUM6 = 0x5a,
-	  NUM7 = 0x42,
-	  NUM8 = 0x52,
-	  NUM9 = 0x4A
-};
-
 //% color=50 weight=19
 //% icon="\uf1eb"
-namespace Mbit_IR { 
-  map<RemoteButton, vA> actions;
-  map<RemoteButton, uint32_t> lastact;
+namespace Microbit_IR { 
   Timer tsb; 
   uint8_t buf[32];
   uint32_t now;
   ReceiverIR *rx;
   RemoteIR::Format fmt = RemoteIR::UNKNOWN;
 
-  /**
-  * button pushed.
-  */
-  //% blockId=ir_received_left_event
-  //% block="on |%btn| button pressed"
-  void onPressEvent(RemoteButton btn, Action body) {
-    //if(actions.find(btn) == actions.end()) actions[btn] = new vector();
-    actions[btn].push_back(body);
-  }
 
-  void cA(vA runner){for(int i=0;i<runner.size();i++){runAction0(runner[i]);} }
-
-  void onReceivable(){
-    int x = rx->getData(&fmt, buf, 32 * 8);
-    if(actions.find((RemoteButton)buf[2]) == actions.end()) return;
-    now = tsb.read_ms();
-    if(now - lastact[(RemoteButton)buf[2]] < 100) return;
-    lastact[(RemoteButton)buf[2]] = now;
-    cA(actions[(RemoteButton)buf[2]]); 
-  }
-
-  void monitorIR(){
-    while(1){
-      while(rx->getState() != ReceiverIR::Received){ 
-        uBit.sleep(50);
-      }
-      onReceivable();
+  //% weight=78
+  //% blockId=ir_getdata block="赤外線データ"
+  //% blockHidden=false
+  uint32_t function Get_IRData(void) {
+    if (rx->getState() == ReceiverIR::Received){
+      int x = rx->getData(&fmt, buf, 32 * 8);
+      return (uint32_t)((buf[3]<<24)|(buf[2]<<16)|(buf[1]<<8)|(buf[0]));
+    }else{
+      return 0xffffffff;
     }
   }
+
+  //% weight=79
+  //% blockId=ir_is_received block="赤外線受信あり?"
+  //% blockHidden=false
+  boolean is_IRreceived(void){
+    if (rx->getState() == ReceiverIR::Received) return true;
+    return false;
+  }
+
+//  void monitorIR(){
+//    while(1){
+//      while(rx->getState() != ReceiverIR::Received){ 
+//        uBit.sleep(50);
+//      }
+//      onReceivable();
+//    }
+//  }
 
   /**
   * initialises local variablesssss
   */
   //% blockId=ir_init
-  //% block="connect ir receiver to %pin"
+  //% block="赤外線受信器を %pin に接続する"
   void init(Pins pin){
     rx = new ReceiverIR((PinName)pin);
     tsb.start(); //interrupt timer for debounce
-    create_fiber(monitorIR);
+    //create_fiber(monitorIR);
   }
 }

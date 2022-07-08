@@ -1,20 +1,18 @@
 {
-    "name": "OSOYOO_IR",
-    "version": "1.0.0",
-    "description": "Extension for OSOYOO micro:bit IR receiver module",
-    "license": "MIT",
+    "name": "KRC_IR",
+    "version": "0.0.1",
+    "description": "Extension for KRC micro:bit IR receiver module",
     "dependencies": {
         "core": "*"
     },
     "files": [
-        "shims.d.ts",
+        "main.ts",
         "enums.d.ts",
         "ir.cpp",
         "ReceiverIR.cpp",
         "ReceiverIR.h",
         "RemoteIR.h",
-        "TransmitterIR.cpp",
-        "TransmitterIR.h"
     ],
-    "public": true
+    "public": false,
+    "preferredEditor": "tsprj"
 }
