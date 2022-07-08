@@ -2,17 +2,16 @@
     "name": "KRC_IR",
     "version": "0.0.1",
     "description": "Extension for KRC micro:bit IR receiver module",
+    "license": "MIT",
     "dependencies": {
         "core": "*"
     },
     "files": [
-        "main.ts",
         "enums.d.ts",
         "ir.cpp",
         "ReceiverIR.cpp",
         "ReceiverIR.h",
-        "RemoteIR.h",
+        "RemoteIR.h"
     ],
-    "public": false,
-    "preferredEditor": "tsprj"
+    "public": true
 }
