@@ -4,7 +4,7 @@
 
     //% color="#31C7D5" weight=19
     //% icon="\uf1eb"
-declare namespace OSOYOO_IR {
+declare namespace KRC_IR {
 
     /**
      * button pushed.
@@ -13,12 +13,12 @@ declare namespace OSOYOO_IR {
     //% block="on |%btn| button pressed" shim=Microbit_IR::onPressEvent
     function onPressEvent(btn: RemoteButton, body: () => void): void;
 
-  //% blockId=ir_getdata block="ÀÖ³°Àş¥Ç¡¼¥¿" shim=Microbit_IR::Get_IRData
+  //% blockId=ir_getdata block="èµ¤å¤–ç·šãƒ‡ãƒ¼ã‚¿" shim=Microbit_IR::Get_IRData
   //% blockHidden=false
   function Get_IRData(void): uint32_t;
 
 
-  //% blockId=ir_is_received block="ÀÖ³°Àş¼õ¿®¤¢¤ê?" shim=Microbit_IR::is_IRreceived
+  //% blockId=ir_is_received block="èµ¤å¤–ç·šå—ä¿¡ã‚ã‚Š?" shim=Microbit_IR::is_IRreceived
   //% blockHidden=false
   function is_IRreceived(void): boolean;
 
