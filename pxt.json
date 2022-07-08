@@ -7,13 +7,12 @@
         "core": "*"
     },
     "files": [
+        "shims.d.ts",
         "enums.d.ts",
         "ir.cpp",
         "ReceiverIR.cpp",
         "ReceiverIR.h",
-        "RemoteIR.h",
-        "TransmitterIR.cpp",
-        "TransmitterIR.h"
+        "RemoteIR.h"
     ],
     "public": true
 }

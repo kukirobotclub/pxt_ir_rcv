@@ -39,7 +39,7 @@ namespace Microbit_IR {
   //% weight=78
   //% blockId=ir_getdata block="赤外線データ"
   //% blockHidden=false
-  uint32_t function Get_IRData(void) {
+  uint32_t Get_IRData(void) {
     if (rx->getState() == ReceiverIR::Received){
       int x = rx->getData(&fmt, buf, 32 * 8);
       return (uint32_t)((buf[3]<<24)|(buf[2]<<16)|(buf[1]<<8)|(buf[0]));
