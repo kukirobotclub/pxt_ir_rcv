@@ -1,27 +1,20 @@
 {
-    "name": "pxt_ir_rcv",
-    "version": "0.0.0",
-    "description": "",
+    "name": "OSOYOO_IR",
+    "version": "1.0.0",
+    "description": "Extension for OSOYOO micro:bit IR receiver module",
+    "license": "MIT",
     "dependencies": {
-        "core": "*",
-        "radio": "*",
-        "microphone": "*"
+        "core": "*"
     },
     "files": [
-        "README.md",
-        "main.blocks",
-        "main.ts"
+        "shims.d.ts",
+        "enums.d.ts",
+        "ir.cpp",
+        "ReceiverIR.cpp",
+        "ReceiverIR.h",
+        "RemoteIR.h",
+        "TransmitterIR.cpp",
+        "TransmitterIR.h"
     ],
-    "testFiles": [
-        "test.ts"
-    ],
-    "public": true,
-    "targetVersions": {
-        "target": "5.0.12",
-        "targetId": "microbit"
-    },
-    "supportedTargets": [
-        "microbit"
-    ],
-    "preferredEditor": "blocksprj"
+    "public": true
 }
