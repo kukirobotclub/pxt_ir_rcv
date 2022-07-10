@@ -1,18 +1,29 @@
 {
-    "name": "KRC_IR",
-    "version": "0.0.1",
-    "description": "Extension for KRC micro:bit IR receiver module",
-    "license": "MIT",
+    "name": "RobotCoders_IR_Receiver",
+    "description": "",
     "dependencies": {
-        "core": "*"
+        "core": "*",
+        "radio": "*",
+        "microphone": "*"
     },
     "files": [
-        "shims.d.ts",
-        "enums.d.ts",
-        "ir.cpp",
-        "ReceiverIR.cpp",
-        "ReceiverIR.h",
-        "RemoteIR.h"
+        "main.blocks",
+        "main.ts",
+        "README.md",
+        "custom.ts",
+        "_locales/ja/README.md",
+        "_locales/ja/RobotCoders_IR_Receiver_strings.json"
     ],
-    "public": true
+    "testFiles": [
+        "test.ts"
+    ],
+    "targetVersions": {
+        "target": "4.0.16",
+        "pxt": "7.0.8",
+        "targetId": "microbit"
+    },
+    "supportedTargets": [
+        "microbit"
+    ],
+    "preferredEditor": "tsprj"
 }
