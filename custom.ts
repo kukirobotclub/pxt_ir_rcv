@@ -110,7 +110,7 @@ namespace KRC_IR {
     function appendBitToDatagram(bit: number): number {
         irState.bitsReceived += 1;
 
-        if (irState.bitsReceived <= 8) && (!irState.extraChecked) {
+        if ((irState.bitsReceived <= 8) && (irState.extraChecked === false)) {
             irState.hiword = (irState.hiword << 1) + bit;
             if (irState.protocol === IrProtocol.Keyestudio && bit === 1) {
                 // recover from missing message bits at the beginning
@@ -127,7 +127,7 @@ namespace KRC_IR {
 
         if (irState.bitsReceived === 32) {
 
-			if (!irState.extraChecked) {
+			if (irState.extraChecked === false) {
 				irState.extraChecked = true;
 				if (irState.hiword === 0x4004/*PANASONIC_VENDOR_ID_CODE*/) {	//0x2002
                     irState.vender = 1/*PANASONIC*/;
