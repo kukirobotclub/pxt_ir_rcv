@@ -162,10 +162,10 @@ namespace KRC_IR {
     }
 
     function decode(markAndSpace: number): number {
-        if (markAndSpace < 1600) {
+        if (markAndSpace < 1400) {		//mark 1T + space 1T (T=500us) = 1.125msTYP		<-1600
             // low bit
             return appendBitToDatagram(0);
-        } else if (markAndSpace < 2700) {
+        } else if (markAndSpace < 2300) {	//mark 1T + space 3T (T=500us) = 2.25msTYP	<-2700
             // high bit
             return appendBitToDatagram(1);
         }
