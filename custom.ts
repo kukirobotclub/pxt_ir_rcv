@@ -126,7 +126,7 @@ namespace KRC_IR {
         }
 
         if ((irState.bitsReceived === 16) && (irState.extraChecked === false)) {
-			serial.writeString( ir_rec_to16BitHex(irState.hiword & 0xffff) + " ");
+			//serial.writeString( ir_rec_to16BitHex(irState.hiword & 0xffff) + " ");
 				irState.extraChecked = true;
 				if ((irState.hiword & 0xffff) === 0x4004/*PANASONIC_VENDOR_ID_CODE*/) {	//0x2002
                     irState.vender = 1/*PANASONIC*/;
