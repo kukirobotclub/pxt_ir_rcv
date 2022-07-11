@@ -124,11 +124,14 @@ namespace KRC_IR {
         }
 
         if (irState.bitsReceived === 32) {
-            if (irState.firstdata ){
+
+			serial.writeString( ir_rec_to16BitHex(irState.hiword & 0xffff) + ir_rec_to16BitHex(irState.loword & 0xffff) + " ");
+
+            //if (irState.firstdata ){
               irState.addressSectionBits = irState.hiword & 0xffff;
               irState.commandSectionBits = irState.loword & 0xffff;
               irState.firstdata = false;
-             }
+             //}
             return IR_DATAGRAM;
         } else {
             return IR_INCOMPLETE;
