@@ -65,7 +65,7 @@ const enum IrProtocol {
  * Custom blocks
  */
 //% weight=100 color=#0fbc11 icon="\uf013"
-namespace RobotCoders {
+namespace KRC_IR {
 
     let irState: IrState;
 
@@ -81,6 +81,7 @@ namespace RobotCoders {
         bitsReceived: uint8;
         addressSectionBits: uint16;
         commandSectionBits: uint16;
+		firstdata: boolean;
         hiword: uint16;
         loword: uint16;
         activeCommand: number;
@@ -123,8 +124,11 @@ namespace RobotCoders {
         }
 
         if (irState.bitsReceived === 32) {
-            irState.addressSectionBits = irState.hiword & 0xffff;
-            irState.commandSectionBits = irState.loword & 0xffff;
+            if (irState.firstdata ){
+              irState.addressSectionBits = irState.hiword & 0xffff;
+              irState.commandSectionBits = irState.loword & 0xffff;
+              irState.firstdata = false;
+             }
             return IR_DATAGRAM;
         } else {
             return IR_INCOMPLETE;
@@ -232,6 +236,7 @@ namespace RobotCoders {
             hasNewDatagram: false,
             addressSectionBits: 0,
             commandSectionBits: 0,
+            firstdata: true,
             hiword: 0, // TODO replace with uint32
             loword: 0,
             activeCommand: -1,
@@ -400,7 +405,6 @@ namespace RobotCoders {
      * @param pin IR receiver pin, eg: DigitalPin.P0
      * @param protocol IR protocol, eg: IrProtocol.NEC_OTHER
      */
-    //% subcategory="IR Receiver"
     //% blockId="RBBit_infrared_connect_receiver"
     //% block="connect IR receiver at pin %pin and decode %protocol"
     //% pin.fieldEditor="gridpicker"
@@ -431,7 +435,7 @@ namespace RobotCoders {
             const now = input.runningTime();
             if (now > irState.repeatTimeout) {
                 // repeat timed out
-
+                irState.firstdata = true;
                 const handler = irState.onIrButtonReleased.find(h => h.irButton === irState.activeCommand || IrButton.Any === h.irButton);
                 if (handler) {
                     background.schedule(handler.onEvent, background.Thread.UserCallback, background.Mode.Once, 0);
@@ -450,7 +454,6 @@ namespace RobotCoders {
  * @param action the trigger action
  * @param handler body code to run when the event is raised
  */
-    //% subcategory="IR Receiver"
     //% blockId=RBBit_infrared_on_ir_button
     //% block="on IR button | %button | %action"
     //% button.fieldEditor="gridpicker"
@@ -478,7 +481,6 @@ namespace RobotCoders {
     /**
      * Returns the code of the IR button that was pressed last. Returns -1 (IrButton.Any) if no button has been pressed yet.
      */
-    //% subcategory="IR Receiver"
     //% blockId=RBBit_infrared_ir_button_pressed
     //% block="IR button"
     //% weight=70
@@ -494,7 +496,6 @@ namespace RobotCoders {
      * Do something when an IR datagram is received.
      * @param handler body code to run when the event is raised
      */
-    //% subcategory="IR Receiver"
     //% blockId=RBBit_infrared_on_ir_datagram
     //% block="on IR datagram received"
     //% weight=40
@@ -507,7 +508,6 @@ namespace RobotCoders {
      * Returns the IR datagram as 32-bit hexadecimal string.
      * The last received datagram is returned or "0x00000000" if no data has been received yet.
      */
-    //% subcategory="IR Receiver"
     //% blockId=RBBit_infrared_ir_datagram
     //% block="IR datagram"
     //% weight=30
@@ -524,7 +524,6 @@ namespace RobotCoders {
     /**
      * Returns true if any IR data was received since the last call of this function. False otherwise.
      */
-    //% subcategory="IR Receiver"
     //% blockId=RBBit_infrared_was_any_ir_datagram_received
     //% block="IR data was received"
     //% weight=80
@@ -543,7 +542,6 @@ namespace RobotCoders {
      * Returns the command code of a specific IR button.
      * @param button the button
      */
-    //% subcategory="IR Receiver"
     //% blockId=RBBit_infrared_button_code
     //% button.fieldEditor="gridpicker"
     //% button.fieldOptions.columns=3
