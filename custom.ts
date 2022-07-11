@@ -127,11 +127,11 @@ namespace KRC_IR {
 
 			serial.writeString( ir_rec_to16BitHex(irState.hiword & 0xffff) + ir_rec_to16BitHex(irState.loword & 0xffff) + " ");
 
-            //if (irState.firstdata ){
+            if (irState.firstdata ){
               irState.addressSectionBits = irState.hiword & 0xffff;
               irState.commandSectionBits = irState.loword & 0xffff;
               irState.firstdata = false;
-             //}
+            }
             return IR_DATAGRAM;
         } else {
             return IR_INCOMPLETE;
