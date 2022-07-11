@@ -82,6 +82,8 @@ namespace KRC_IR {
         addressSectionBits: uint16;
         commandSectionBits: uint16;
 		firstdata: boolean;
+		extraChecked: boolean;
+		vender: uint8;
         hiword: uint16;
         loword: uint16;
         activeCommand: number;
@@ -108,7 +110,7 @@ namespace KRC_IR {
     function appendBitToDatagram(bit: number): number {
         irState.bitsReceived += 1;
 
-        if (irState.bitsReceived <= 8) {
+        if (irState.bitsReceived <= 8) && (!irState.extraChecked) {
             irState.hiword = (irState.hiword << 1) + bit;
             if (irState.protocol === IrProtocol.Keyestudio && bit === 1) {
                 // recover from missing message bits at the beginning
@@ -125,6 +127,26 @@ namespace KRC_IR {
 
         if (irState.bitsReceived === 32) {
 
+			if (!irState.extraChecked) {
+				irState.extraChecked = true;
+				if (irState.hiword === 0x4004/*PANASONIC_VENDOR_ID_CODE*/) {	//0x2002
+                    irState.vender = 1/*PANASONIC*/;
+                } else if (irState.hiword === 0x555A/*SHARP_VENDOR_ID_CODE*/) {	//0x5AAA
+                    irState.vender = 2/*KASEIKYO_SHARP*/;
+                } else if (irState.hiword === 0x2A4C/*DENON_VENDOR_ID_CODE*/) {	//0x3254
+                    irState.vender = 3/*KASEIKYO_DENON*/;
+                } else if (irState.hiword === 0xC080/*JVC_VENDOR_ID_CODE*/) {	//0x0103
+                    irState.vender = 4/*KASEIKYO_JVC*/;
+                } else if (irState.hiword === 0xC4D3/*MITSUBISHI_VENDOR_ID_CODE*/) {	//0xCB23
+                    irState.vender = 5/*KASEIKYO_MITSUBISHI*/;
+                }
+				if (irState.vender) {
+					irState.bitsReceived = 0;
+				}
+			}
+
+			serial.writeNumber( irState.vender );
+			serial.writeString( ":" );
 			serial.writeString( ir_rec_to16BitHex(irState.hiword & 0xffff) + ir_rec_to16BitHex(irState.loword & 0xffff) + " ");
 
             if (irState.firstdata ){
@@ -148,6 +170,8 @@ namespace KRC_IR {
         }
 
         irState.bitsReceived = 0;
+		irState.extraChecked = false;
+		irState.vender = 0;
 
         if (markAndSpace < 12500) {
             // Repeat detected
@@ -239,6 +263,8 @@ namespace KRC_IR {
             hasNewDatagram: false,
             addressSectionBits: 0,
             commandSectionBits: 0,
+    		extraChecked: false,
+    		vender: 0,
             firstdata: true,
             hiword: 0, // TODO replace with uint32
             loword: 0,
@@ -444,6 +470,8 @@ namespace KRC_IR {
                     background.schedule(handler.onEvent, background.Thread.UserCallback, background.Mode.Once, 0);
                 }
 
+        		irState.extraChecked = false;
+        		irState.vender = 0;
                 irState.bitsReceived = 0;
                 irState.activeCommand = -1;
             }
