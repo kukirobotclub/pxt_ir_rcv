@@ -1,5 +1,5 @@
 {
-    "name": "RobotCoders_IR_Receiver",
+    "name": "KRC_IR_Receiver",
     "description": "",
     "dependencies": {
         "core": "*",
@@ -12,7 +12,7 @@
         "README.md",
         "custom.ts",
         "_locales/ja/README.md",
-        "_locales/ja/RobotCoders_IR_Receiver_strings.json"
+        "_locales/ja/KRC_IR_Receiver_strings.json"
     ],
     "testFiles": [
         "test.ts"
