@@ -125,25 +125,26 @@ namespace KRC_IR {
             irState.loword = (irState.loword << 1) + bit;
         }
 
-        if (irState.bitsReceived === 32) {
-
-			if (irState.extraChecked === false) {
+        if ((irState.bitsReceived === 16) && (irState.extraChecked === false)) {
+			serial.writeString( ir_rec_to16BitHex(irState.hiword & 0xffff) " ");
 				irState.extraChecked = true;
-				if (irState.hiword === 0x4004/*PANASONIC_VENDOR_ID_CODE*/) {	//0x2002
+				if ((irState.hiword & 0xffff) === 0x4004/*PANASONIC_VENDOR_ID_CODE*/) {	//0x2002
                     irState.vender = 1/*PANASONIC*/;
-                } else if (irState.hiword === 0x555A/*SHARP_VENDOR_ID_CODE*/) {	//0x5AAA
+                } else if ((irState.hiword & 0xffff) === 0x555A/*SHARP_VENDOR_ID_CODE*/) {	//0x5AAA
                     irState.vender = 2/*KASEIKYO_SHARP*/;
-                } else if (irState.hiword === 0x2A4C/*DENON_VENDOR_ID_CODE*/) {	//0x3254
+                } else if ((irState.hiword & 0xffff) === 0x2A4C/*DENON_VENDOR_ID_CODE*/) {	//0x3254
                     irState.vender = 3/*KASEIKYO_DENON*/;
-                } else if (irState.hiword === 0xC080/*JVC_VENDOR_ID_CODE*/) {	//0x0103
+                } else if ((irState.hiword & 0xffff) === 0xC080/*JVC_VENDOR_ID_CODE*/) {	//0x0103
                     irState.vender = 4/*KASEIKYO_JVC*/;
-                } else if (irState.hiword === 0xC4D3/*MITSUBISHI_VENDOR_ID_CODE*/) {	//0xCB23
+                } else if ((irState.hiword & 0xffff) === 0xC4D3/*MITSUBISHI_VENDOR_ID_CODE*/) {	//0xCB23
                     irState.vender = 5/*KASEIKYO_MITSUBISHI*/;
                 }
-				if (irState.vender) {
+				if (irState.vender > 0) {
 					irState.bitsReceived = 0;
 				}
-			}
+		}
+
+        if (irState.bitsReceived === 32) {
 
 			serial.writeNumber( irState.vender );
 			serial.writeString( ":" );
