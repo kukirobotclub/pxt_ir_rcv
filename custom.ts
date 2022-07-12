@@ -76,17 +76,19 @@ namespace KRC_IR {
     const REPEAT_TIMEOUT_MS = 120;
 
     interface IrState {
-        protocol: IrProtocol;
-        hasNewDatagram: boolean;
-        bitsReceived: uint8;
+        protocol: IrProtocol;			// NEC,Keystudio
+        hasNewDatagram: boolean;		// データが受信完了された
+        bitsReceived: uint8;			// 受信ビットカウンタ
+		extraSectionBits: uint16;		// Extraコード
         addressSectionBits: uint16;
         commandSectionBits: uint16;
-		firstdata: boolean;
-		extraChecked: boolean;
-		vender: uint8;
-        hiword: uint16;
-        loword: uint16;
-        activeCommand: number;
+		state: number;					// 受信ステート
+		firstdata: boolean;				// 最初のデータを保存するためのフラグ
+		extraChecked: boolean;			// Extraコード回避用のフラグ
+		vender: uint8;					// 受信データから判断した赤外線フォーマット
+        hiword: uint16;					//受信中のデータ
+        loword: uint16;					//
+        activeCommand: number;			//受信データのコマンド部分(NEC)
         repeatTimeout: number;
         onIrButtonPressed: IrButtonHandler[];
         onIrButtonReleased: IrButtonHandler[];
@@ -128,18 +130,19 @@ namespace KRC_IR {
         if ((irState.bitsReceived === 16) && (irState.extraChecked === false)) {
 			//serial.writeString( ir_rec_to16BitHex(irState.hiword & 0xffff) + " ");
 				irState.extraChecked = true;
-				if ((irState.hiword & 0xffff) === 0x4004/*PANASONIC_VENDOR_ID_CODE*/) {	//0x2002
-                    irState.vender = 1/*PANASONIC*/;
-                } else if ((irState.hiword & 0xffff) === 0x555A/*SHARP_VENDOR_ID_CODE*/) {	//0x5AAA
-                    irState.vender = 2/*KASEIKYO_SHARP*/;
-                } else if ((irState.hiword & 0xffff) === 0x2A4C/*DENON_VENDOR_ID_CODE*/) {	//0x3254
-                    irState.vender = 3/*KASEIKYO_DENON*/;
-                } else if ((irState.hiword & 0xffff) === 0xC080/*JVC_VENDOR_ID_CODE*/) {	//0x0103
-                    irState.vender = 4/*KASEIKYO_JVC*/;
-                } else if ((irState.hiword & 0xffff) === 0xC4D3/*MITSUBISHI_VENDOR_ID_CODE*/) {	//0xCB23
-                    irState.vender = 5/*KASEIKYO_MITSUBISHI*/;
-                }
-				if (irState.vender > 0) {
+				//if ((irState.hiword & 0xffff) === 0x4004/*PANASONIC_VENDOR_ID_CODE*/) {	//0x2002
+                //    irState.vender = 1/*PANASONIC*/;
+                //} else if ((irState.hiword & 0xffff) === 0x555A/*SHARP_VENDOR_ID_CODE*/) {	//0x5AAA
+                //    irState.vender = 2/*KASEIKYO_SHARP*/;
+                //} else if ((irState.hiword & 0xffff) === 0x2A4C/*DENON_VENDOR_ID_CODE*/) {	//0x3254
+                //    irState.vender = 3/*KASEIKYO_DENON*/;
+                //} else if ((irState.hiword & 0xffff) === 0xC080/*JVC_VENDOR_ID_CODE*/) {	//0x0103
+                //    irState.vender = 4/*KASEIKYO_JVC*/;
+                //} else if ((irState.hiword & 0xffff) === 0xC4D3/*MITSUBISHI_VENDOR_ID_CODE*/) {	//0xCB23
+                //    irState.vender = 5/*KASEIKYO_MITSUBISHI*/;
+                //}
+				if (irState.vender === 2) {
+                    irState.extraSectionBits = irState.hiword & 0xffff;
 					irState.bitsReceived = 0;
 				}
 		}
@@ -147,6 +150,8 @@ namespace KRC_IR {
         if (irState.bitsReceived === 32) {
 
 			serial.writeNumber( irState.vender );
+			serial.writeString( ":" );
+			serial.writeString( ir_rec_to16BitHex( irState.extraSectionBits + " ");
 			serial.writeString( ":" );
 			serial.writeString( ir_rec_to16BitHex(irState.hiword & 0xffff) + ir_rec_to16BitHex(irState.loword & 0xffff) + " ");
 
@@ -162,14 +167,34 @@ namespace KRC_IR {
     }
 
     function decode(markAndSpace: number): number {
-        if (markAndSpace < 1400) {		//mark 1T + space 1T (T=500us) = 1.125msTYP		<-1600
-            // low bit
+      if (state === 1) { // reciving bit
+        if (irState.vender === 1) { // NEC
+          // NEC  "0" 1120 "1" 2250
+          if (markAndSpace < 1456) {            // low bit
             return appendBitToDatagram(0);
-        } else if (markAndSpace < 2300) {	//mark 1T + space 3T (T=500us) = 2.25msTYP	<-2700
-            // high bit
+          } else if (markAndSpace < 2700) {	     // high bit
             return appendBitToDatagram(1);
+          }
+        }
+        if (irState.vender === 2) { // Panasonic
+          // Panasonic "0" 800 "1" 1600
+          if (markAndSpace < 1100) {            // low bit
+            return appendBitToDatagram(0);
+          } else if (markAndSpace < 2100) {	     // high bit
+            return appendBitToDatagram(1);
+          }
+        }
+        if (irState.vender === 2) { // SONY
+           // SONY  "0" 1200 "1" 1800
+          if (markAndSpace < 1500) {            // low bit
+            return appendBitToDatagram(0);
+          } else if (markAndSpace < 2400) {	     // high bit
+            return appendBitToDatagram(1);
+          }
         }
 
+		//規定以上長いときは初期化しちゃってる
+        irState.state = 0;
         irState.bitsReceived = 0;
 		irState.extraChecked = false;
 		irState.vender = 0;
@@ -183,6 +208,23 @@ namespace KRC_IR {
         } else {
             return IR_INCOMPLETE;
         }
+
+      }else if (state === 0) {	// Leader
+        // TYP Leader NEC 13500us   Panasonic 4800us  SONY 3000us
+        if (markAndSpace >= 2100 && markAndSpace <= 3900) {
+		    irState.vender = 3;	//SONY
+			irState.state = 1;
+		}
+        if (markAndSpace > 3900 && markAndSpace <= 6240) {
+		    irState.vender = 2;	//Panasonic
+			irState.state = 1;
+		}
+        if (markAndSpace >= 9450 && markAndSpace <= 15000) {
+		    irState.vender = 1;	//NEC
+			irState.state = 1;
+		}
+		
+      }
     }
 
     function enableIrMarkSpaceDetection(pin: DigitalPin) {
@@ -262,10 +304,12 @@ namespace KRC_IR {
             protocol: undefined,
             bitsReceived: 0,
             hasNewDatagram: false,
+            extraSectionBits: 0,
             addressSectionBits: 0,
             commandSectionBits: 0,
     		extraChecked: false,
     		vender: 0,
+			state: 0,
             firstdata: true,
             hiword: 0, // TODO replace with uint32
             loword: 0,
@@ -472,6 +516,7 @@ namespace KRC_IR {
                 }
 
         		irState.extraChecked = false;
+				irState.state = 0;
         		irState.vender = 0;
                 irState.bitsReceived = 0;
                 irState.activeCommand = -1;
