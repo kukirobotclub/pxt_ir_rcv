@@ -167,7 +167,7 @@ namespace KRC_IR {
     }
 
     function decode(markAndSpace: number): number {
-      if (state === 1) { // reciving bit
+      if (irState.state === 1) { // reciving bit
         if (irState.vender === 1) { // NEC
           // NEC  "0" 1120 "1" 2250
           if (markAndSpace < 1456) {            // low bit
@@ -209,7 +209,7 @@ namespace KRC_IR {
             return IR_INCOMPLETE;
         }
 
-      }else if (state === 0) {	// Leader
+      }else if (irState.state === 0) {	// Leader
         // TYP Leader NEC 13500us   Panasonic 4800us  SONY 3000us
         if (markAndSpace >= 2100 && markAndSpace <= 3900) {
 		    irState.vender = 3;	//SONY
@@ -223,7 +223,7 @@ namespace KRC_IR {
 		    irState.vender = 1;	//NEC
 			irState.state = 1;
 		}
-		
+        return IR_INCOMPLETE;
       }
     }
 
