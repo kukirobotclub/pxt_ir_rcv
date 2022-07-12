@@ -252,17 +252,25 @@ namespace KRC_IR {
         pins.onPulsed(pin, PulseValue.Low, () => {
             // HIGH, see https://github.com/microsoft/pxt-microbit/issues/1416
             mark = pins.pulseDuration();
+			//debug pin
+			pins.digitalWritePin(DigitalPin.P0, 0);
         });
 
         pins.onPulsed(pin, PulseValue.High, () => {
             // LOW
             space = pins.pulseDuration();
             const status = decode(mark + space);
+			//debug pin
+			pins.digitalWritePin(DigitalPin.P0, 1);
 
             if (status !== IR_INCOMPLETE) {
                 handleIrEvent(status);
             }
         });
+
+		//debug pin
+		pins.digitalWritePin(DigitalPin.P0, 1);
+
     }
 
     function handleIrEvent(irEvent: number) {
