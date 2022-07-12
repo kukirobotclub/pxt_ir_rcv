@@ -144,7 +144,9 @@ namespace KRC_IR {
 				if (irState.vender === 2) {
                     irState.extraSectionBits = irState.hiword & 0xffff;
 					irState.bitsReceived = 0;
-				}
+				}else{
+                    irState.extraSectionBits = 0;
+                }
 		}
 
         if (irState.bitsReceived === 32) {
@@ -184,7 +186,7 @@ namespace KRC_IR {
             return appendBitToDatagram(1);
           }
         }
-        if (irState.vender === 2) { // SONY
+        if (irState.vender === 3) { // SONY
            // SONY  "0" 1200 "1" 1800
           if (markAndSpace < 1500) {            // low bit
             return appendBitToDatagram(0);
@@ -192,6 +194,10 @@ namespace KRC_IR {
             return appendBitToDatagram(1);
           }
         }
+
+			serial.writeString( "Bit err: " );
+		    serial.writeNumber( markAndSpace );
+			serial.writeString( " " );
 
 		//規定以上長いときは初期化しちゃってる
         irState.state = 0;
@@ -223,10 +229,11 @@ namespace KRC_IR {
 		    irState.vender = 1;	//NEC
 			irState.state = 1;
 		}
-        if (irState.vender === 0) {	//error
-			serial.writeString( "Leader err: " );
-		    serial.writeNumber( markAndSpace );
-        }
+        //if (irState.vender === 0) {	//error
+		//	serial.writeString( "Leader err: " );
+		//    serial.writeNumber( markAndSpace );
+		//	serial.writeString( " " );
+        //}
 
         return IR_INCOMPLETE;
       }
