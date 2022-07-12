@@ -223,6 +223,11 @@ namespace KRC_IR {
 		    irState.vender = 1;	//NEC
 			irState.state = 1;
 		}
+        if (irState.vender === 0) {	//error
+			serial.writeString( "Leader err: " );
+		    serial.writeNumber( markAndSpace );
+        }
+
         return IR_INCOMPLETE;
       }
         return IR_INCOMPLETE;
