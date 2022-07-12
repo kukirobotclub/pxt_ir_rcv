@@ -197,7 +197,9 @@ namespace KRC_IR {
 
 			serial.writeString( "Bit err: " );
 		    serial.writeNumber( markAndSpace );
-			serial.writeString( " " );
+			serial.writeString( "(" );
+		    serial.writeNumber( irState.bitsReceived );
+			serial.writeString( ") " );
 
 		//規定以上長いときは初期化しちゃってる
         irState.state = 0;
