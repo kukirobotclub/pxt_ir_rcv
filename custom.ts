@@ -225,6 +225,7 @@ namespace KRC_IR {
 		}
         return IR_INCOMPLETE;
       }
+        return IR_INCOMPLETE;
     }
 
     function enableIrMarkSpaceDetection(pin: DigitalPin) {
