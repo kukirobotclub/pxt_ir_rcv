@@ -151,7 +151,7 @@ namespace KRC_IR {
 
 			serial.writeNumber( irState.vender );
 			serial.writeString( ":" );
-			serial.writeString( ir_rec_to16BitHex( irState.extraSectionBits + " ");
+			serial.writeString( ir_rec_to16BitHex(irState.extraSectionBits) + " ");
 			serial.writeString( ":" );
 			serial.writeString( ir_rec_to16BitHex(irState.hiword & 0xffff) + ir_rec_to16BitHex(irState.loword & 0xffff) + " ");
 
