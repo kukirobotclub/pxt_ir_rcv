@@ -115,9 +115,17 @@ namespace KRC_IR {
         switch(irState.vender){
           case 1: // NEC
             if (irState.bitsReceived <= 16) {
-                irState.hiword = (irState.hiword) + (1 << (irState.bitsReceived % 16));
+                if( bit === 1 ){
+                    irState.hiword |= (1 << (irState.bitsReceived % 16));
+                }else{
+                    irState.hiword &= ~(1 << (irState.bitsReceived % 16));
+                }
             } else if (irState.bitsReceived <= 32) {
-                irState.loword = (irState.loword) + (1 << (irState.bitsReceived % 16));
+                if( bit === 1 ){
+                    irState.loword |= (1 << (irState.bitsReceived % 16));
+                }else{
+                    irState.loword &= ~(1 << (irState.bitsReceived % 16));
+                }
             }
 
             if (irState.bitsReceived === 32) {
@@ -140,11 +148,23 @@ namespace KRC_IR {
 
           case 2: // Panasonic
             if (irState.bitsReceived <= 16) {
-                irState.exword = (irState.exword) + (1 << (irState.bitsReceived % 16));
+                if( bit === 1 ){
+                    irState.exword |= (1 << (irState.bitsReceived % 16));
+                }else{
+                    irState.exword &= ~(1 << (irState.bitsReceived % 16));
+                }
             } else if (irState.bitsReceived <= 32) {
-                irState.hiword = (irState.hiword) + (1 << (irState.bitsReceived % 16));
+                if( bit === 1 ){
+                    irState.hiword |= (1 << (irState.bitsReceived % 16));
+                }else{
+                    irState.hiword &= ~(1 << (irState.bitsReceived % 16));
+                }
             } else if (irState.bitsReceived <= 48) {
-                irState.loword = (irState.loword) + (1 << (irState.bitsReceived % 16));
+                if( bit === 1 ){
+                    irState.loword |= (1 << (irState.bitsReceived % 16));
+                }else{
+                    irState.loword &= ~(1 << (irState.bitsReceived % 16));
+                }
             }
 
             if (irState.bitsReceived === 48) {
@@ -167,11 +187,19 @@ namespace KRC_IR {
             }
             break;
 
-          case 1: // NEC
+          case 3: // SONY
             if (irState.bitsReceived <= 16) {
-                irState.hiword = (irState.hiword) + (1 << (irState.bitsReceived % 16));
+                if( bit === 1 ){
+                    irState.hiword |= (1 << (irState.bitsReceived % 16));
+                }else{
+                    irState.hiword &= ~(1 << (irState.bitsReceived % 16));
+                }
             } else if (irState.bitsReceived <= 32) {
-                irState.loword = (irState.loword) + (1 << (irState.bitsReceived % 16));
+                if( bit === 1 ){
+                    irState.loword |= (1 << (irState.bitsReceived % 16));
+                }else{
+                    irState.loword &= ~(1 << (irState.bitsReceived % 16));
+                }
             }
 
 	        if (irState.bitsReceived === 12) {
