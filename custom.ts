@@ -189,7 +189,11 @@ namespace KRC_IR {
             } else {
                 return IR_INCOMPLETE;
             }
+
+	      default:
+			return IR_INCOMPLETE;
         }
+		return IR_INCOMPLETE;
     }
 
     function decode(markAndSpace: number): number {
