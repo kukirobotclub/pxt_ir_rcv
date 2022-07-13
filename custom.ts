@@ -112,16 +112,7 @@ namespace KRC_IR {
     function appendBitToDatagram(bit: number): number {
         irState.bitsReceived += 1;
 
-        if ((irState.bitsReceived <= 8) && (irState.extraChecked === false)) {
-            irState.hiword = (irState.hiword << 1) + bit;
-            if (irState.protocol === IrProtocol.Keyestudio && bit === 1) {
-                // recover from missing message bits at the beginning
-                // Keyestudio address is 0 and thus missing bits can be detected
-                // by checking for the first inverse address bit (which is a 1)
-                irState.bitsReceived = 9;
-                irState.hiword = 1;
-            }
-        } else if (irState.bitsReceived <= 16) {
+        if (irState.bitsReceived <= 16) {
             irState.hiword = (irState.hiword << 1) + bit;
         } else if (irState.bitsReceived <= 32) {
             irState.loword = (irState.loword << 1) + bit;
@@ -208,10 +199,11 @@ namespace KRC_IR {
 		irState.extraChecked = false;
 		irState.vender = 0;
 
-        if (markAndSpace < 12500) {
-            // Repeat detected
-            return IR_REPEAT;
-        } else if (markAndSpace < 14500) {
+//        if (markAndSpace < 12500) {
+//            // Repeat detected
+//            return IR_REPEAT;
+//        } else 
+        if (markAndSpace < 14500) {
             // Start detected
             return IR_INCOMPLETE;
         } else {
@@ -252,8 +244,9 @@ namespace KRC_IR {
         pins.onPulsed(pin, PulseValue.Low, () => {
             // HIGH, see https://github.com/microsoft/pxt-microbit/issues/1416
             mark = pins.pulseDuration();
+            irState.bitTime = control.millis();
 			//debug pin
-			pins.digitalWritePin(DigitalPin.P0, 0);
+			//pins.digitalWritePin(DigitalPin.P0, 0);
         });
 
         pins.onPulsed(pin, PulseValue.High, () => {
@@ -261,7 +254,7 @@ namespace KRC_IR {
             space = pins.pulseDuration();
             const status = decode(mark + space);
 			//debug pin
-			pins.digitalWritePin(DigitalPin.P0, 1);
+			//pins.digitalWritePin(DigitalPin.P0, 1);
 
             if (status !== IR_INCOMPLETE) {
                 handleIrEvent(status);
@@ -269,7 +262,7 @@ namespace KRC_IR {
         });
 
 		//debug pin
-		pins.digitalWritePin(DigitalPin.P0, 1);
+		//pins.digitalWritePin(DigitalPin.P0, 1);
 
     }
 
