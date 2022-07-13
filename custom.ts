@@ -84,10 +84,10 @@ namespace KRC_IR {
         commandSectionBits: uint16;
 		state: number;					// 受信ステート
 		firstdata: boolean;				// 最初のデータを保存するためのフラグ
+		extraChecked: boolean;			// Extraコード回避用のフラグ
 		vender: uint8;					// 受信データから判断した赤外線フォーマット
         hiword: uint16;					//受信中のデータ
         loword: uint16;					//
-        exword: uint16;					//
         activeCommand: number;			//受信データのコマンド部分(NEC)
         repeatTimeout: number;
         onIrButtonPressed: IrButtonHandler[];
@@ -112,133 +112,53 @@ namespace KRC_IR {
     function appendBitToDatagram(bit: number): number {
         irState.bitsReceived += 1;
 
-        switch(irState.vender){
-          case 1: // NEC
-            if (irState.bitsReceived <= 16) {
-                irState.hiword = (irState.hiword << 1) + bit;
-            } else if (irState.bitsReceived <= 32) {
-                irState.loword = (irState.loword << 1) + bit;
-            }
-//            if (irState.bitsReceived <= 16) {
-//                if( bit === 1 ){
-//                    irState.hiword |= (1 << (irState.bitsReceived % 16));
-//                }else{
-//                    irState.hiword &= ~(1 << (irState.bitsReceived % 16));
-//                }
-//            } else if (irState.bitsReceived <= 32) {
-//                if( bit === 1 ){
-//                    irState.loword |= (1 << (irState.bitsReceived % 16));
-//                }else{
-//                    irState.loword &= ~(1 << (irState.bitsReceived % 16));
-//                }
-//            }
-
-            if (irState.bitsReceived === 32) {
-    			serial.writeNumber( irState.vender );
-    			serial.writeString( ":" );
-    			serial.writeString( ir_rec_to16BitHex(irState.hiword & 0xffff) + ir_rec_to16BitHex(irState.loword & 0xffff) + " ");
-                if (irState.firstdata ){
-                    irState.extraSectionBits = 0;
-                  irState.addressSectionBits = irState.hiword & 0xffff;
-                  irState.commandSectionBits = irState.loword & 0xffff;
-                  irState.firstdata = false;
-                }
-    			irState.state = 0;
-    		    irState.vender = 0;
-                return IR_DATAGRAM;
-            } else {
-                return IR_INCOMPLETE;
-            }
-            break;
-
-          case 2: // Panasonic
-            if (irState.bitsReceived <= 16) {
-                irState.exword = (irState.exword << 1) + bit;
-            } else if (irState.bitsReceived <= 32) {
-                irState.hiword = (irState.hiword << 1) + bit;
-            } else if (irState.bitsReceived <= 48) {
-                irState.loword = (irState.loword << 1) + bit;
-            }
-//            if (irState.bitsReceived <= 16) {
-//                if( bit === 1 ){
-//                    irState.exword |= (1 << (irState.bitsReceived % 16));
-//                }else{
-//                    irState.exword &= ~(1 << (irState.bitsReceived % 16));
-//                }
-//            } else if (irState.bitsReceived <= 32) {
-//                if( bit === 1 ){
-//                    irState.hiword |= (1 << (irState.bitsReceived % 16));
-//                }else{
-//                    irState.hiword &= ~(1 << (irState.bitsReceived % 16));
-//                }
-//            } else if (irState.bitsReceived <= 48) {
-//                if( bit === 1 ){
-//                    irState.loword |= (1 << (irState.bitsReceived % 16));
-//                }else{
-//                    irState.loword &= ~(1 << (irState.bitsReceived % 16));
-//                }
-//            }
-
-            if (irState.bitsReceived === 48) {
-    			serial.writeNumber( irState.vender );
-    			serial.writeString( ":" );
-    			serial.writeString( ir_rec_to16BitHex(irState.exword) + " ");
-    			serial.writeString( ":" );
-    			serial.writeString( ir_rec_to16BitHex(irState.hiword & 0xffff) + ir_rec_to16BitHex(irState.loword & 0xffff) + " ");
-                if (irState.firstdata ){
-                    irState.extraSectionBits = irState.hiword & 0xffff;
-                  irState.addressSectionBits = irState.hiword & 0xffff;
-                  irState.commandSectionBits = irState.loword & 0xffff;
-                  irState.firstdata = false;
-                }
-			    irState.state = 0;
-		        irState.vender = 0;
-                return IR_DATAGRAM;
-            } else {
-                return IR_INCOMPLETE;
-            }
-            break;
-
-          case 3: // SONY
-            if (irState.bitsReceived <= 16) {
-                irState.hiword = (irState.hiword << 1) + bit;
-            } else if (irState.bitsReceived <= 32) {
-                irState.loword = (irState.loword << 1) + bit;
-            }
-//            if (irState.bitsReceived <= 16) {
-//                if( bit === 1 ){
-//                    irState.hiword |= (1 << (irState.bitsReceived % 16));
-//                }else{
-//                    irState.hiword &= ~(1 << (irState.bitsReceived % 16));
-//                }
-//            } else if (irState.bitsReceived <= 32) {
-//                if( bit === 1 ){
-//                    irState.loword |= (1 << (irState.bitsReceived % 16));
-//                }else{
-//                    irState.loword &= ~(1 << (irState.bitsReceived % 16));
-//                }
-//            }
-
-	        if (irState.bitsReceived === 12) {
-    			serial.writeNumber( irState.vender );
-    			serial.writeString( ":" );
-    			serial.writeString( ir_rec_to16BitHex(irState.hiword & 0xffff) + ir_rec_to16BitHex(irState.loword & 0xffff) + " ");
-                if (irState.firstdata ){
-                  irState.addressSectionBits = irState.hiword & 0xffff;
-                  irState.commandSectionBits = irState.loword & 0xffff;
-                  irState.firstdata = false;
-                }
-			    irState.state = 0;
-		        irState.vender = 0;
-                return IR_DATAGRAM;
-            } else {
-                return IR_INCOMPLETE;
-            }
-
-	      default:
-			return IR_INCOMPLETE;
+        if (irState.bitsReceived <= 16) {
+            irState.hiword = (irState.hiword << 1) + bit;
+        } else if (irState.bitsReceived <= 32) {
+            irState.loword = (irState.loword << 1) + bit;
         }
-		return IR_INCOMPLETE;
+
+        if ((irState.bitsReceived === 16) && (irState.extraChecked === false)) {
+			//serial.writeString( ir_rec_to16BitHex(irState.hiword & 0xffff) + " ");
+				irState.extraChecked = true;
+				//if ((irState.hiword & 0xffff) === 0x4004/*PANASONIC_VENDOR_ID_CODE*/) {	//0x2002
+                //    irState.vender = 1/*PANASONIC*/;
+                //} else if ((irState.hiword & 0xffff) === 0x555A/*SHARP_VENDOR_ID_CODE*/) {	//0x5AAA
+                //    irState.vender = 2/*KASEIKYO_SHARP*/;
+                //} else if ((irState.hiword & 0xffff) === 0x2A4C/*DENON_VENDOR_ID_CODE*/) {	//0x3254
+                //    irState.vender = 3/*KASEIKYO_DENON*/;
+                //} else if ((irState.hiword & 0xffff) === 0xC080/*JVC_VENDOR_ID_CODE*/) {	//0x0103
+                //    irState.vender = 4/*KASEIKYO_JVC*/;
+                //} else if ((irState.hiword & 0xffff) === 0xC4D3/*MITSUBISHI_VENDOR_ID_CODE*/) {	//0xCB23
+                //    irState.vender = 5/*KASEIKYO_MITSUBISHI*/;
+                //}
+				if (irState.vender === 2) {
+                    irState.extraSectionBits = irState.hiword & 0xffff;
+					irState.bitsReceived = 0;
+				}else{
+                    irState.extraSectionBits = 0;
+                }
+		}
+
+        if (irState.bitsReceived === 32) {
+
+			serial.writeNumber( irState.vender );
+			serial.writeString( ":" );
+			serial.writeString( ir_rec_to16BitHex(irState.extraSectionBits) + " ");
+			serial.writeString( ":" );
+			serial.writeString( ir_rec_to16BitHex(irState.hiword & 0xffff) + ir_rec_to16BitHex(irState.loword & 0xffff) + " ");
+
+            if (irState.firstdata ){
+              irState.addressSectionBits = irState.hiword & 0xffff;
+              irState.commandSectionBits = irState.loword & 0xffff;
+              irState.firstdata = false;
+            }
+			irState.state = 0;
+		    irState.vender = 0;
+            return IR_DATAGRAM;
+        } else {
+            return IR_INCOMPLETE;
+        }
     }
 
     function decode(markAndSpace: number): number {
@@ -269,26 +189,32 @@ namespace KRC_IR {
         }
 
 		//連続できたとき
-		if (irState.bitsReceived > 0) {
+		if (irState.vender > 0) {
+			irState.bitsReceived = 0;
+		    irState.extraChecked = false;
+            return IR_INCOMPLETE;
+		}
+
 			serial.writeString( "Bit err: " );
-    			serial.writeNumber( irState.vender );
-    			serial.writeString( ":" );
-    			serial.writeString( ir_rec_to16BitHex(irState.exword) + " ");
-    			serial.writeString( ":" );
-    			serial.writeString( ir_rec_to16BitHex(irState.hiword & 0xffff) + ir_rec_to16BitHex(irState.loword & 0xffff) + " (");
+		    serial.writeNumber( markAndSpace );
+			serial.writeString( "(" );
 		    serial.writeNumber( irState.bitsReceived );
 			serial.writeString( ") " );
-		    serial.writeNumber( markAndSpace );
-			serial.writeString( "us " );
 
-            irState.bitsReceived = 0;
-    		if (irState.vender > 0) {
-            	return IR_INCOMPLETE;
-	    	}
-    		//規定以上長いときは初期化しちゃってる
-            irState.state = 0;
-    		irState.vender = 0;
+		//規定以上長いときは初期化しちゃってる
+        irState.state = 0;
+        irState.bitsReceived = 0;
+		irState.extraChecked = false;
+		irState.vender = 0;
 
+//        if (markAndSpace < 12500) {
+//            // Repeat detected
+//            return IR_REPEAT;
+//        } else 
+        if (markAndSpace < 14500) {
+            // Start detected
+            return IR_INCOMPLETE;
+        } else {
             return IR_INCOMPLETE;
         }
 
@@ -408,12 +334,12 @@ namespace KRC_IR {
             extraSectionBits: 0,
             addressSectionBits: 0,
             commandSectionBits: 0,
+    		extraChecked: false,
     		vender: 0,
 			state: 0,
             firstdata: true,
             hiword: 0, // TODO replace with uint32
             loword: 0,
-            exword: 0,
             activeCommand: -1,
             repeatTimeout: 0,
             onIrButtonPressed: [],
@@ -616,6 +542,7 @@ namespace KRC_IR {
                     background.schedule(handler.onEvent, background.Thread.UserCallback, background.Mode.Once, 0);
                 }
 
+        		irState.extraChecked = false;
 				irState.state = 0;
         		irState.vender = 0;
                 irState.bitsReceived = 0;
