@@ -114,27 +114,25 @@ namespace KRC_IR {
 
         switch(irState.vender){
           case 1: // NEC
-#if 1
             if (irState.bitsReceived <= 16) {
                 irState.hiword = (irState.hiword << 1) + bit;
             } else if (irState.bitsReceived <= 32) {
                 irState.loword = (irState.loword << 1) + bit;
             }
-#else
-            if (irState.bitsReceived <= 16) {
-                if( bit === 1 ){
-                    irState.hiword |= (1 << (irState.bitsReceived % 16));
-                }else{
-                    irState.hiword &= ~(1 << (irState.bitsReceived % 16));
-                }
-            } else if (irState.bitsReceived <= 32) {
-                if( bit === 1 ){
-                    irState.loword |= (1 << (irState.bitsReceived % 16));
-                }else{
-                    irState.loword &= ~(1 << (irState.bitsReceived % 16));
-                }
-            }
-#endif
+//            if (irState.bitsReceived <= 16) {
+//                if( bit === 1 ){
+//                    irState.hiword |= (1 << (irState.bitsReceived % 16));
+//                }else{
+//                    irState.hiword &= ~(1 << (irState.bitsReceived % 16));
+//                }
+//            } else if (irState.bitsReceived <= 32) {
+//                if( bit === 1 ){
+//                    irState.loword |= (1 << (irState.bitsReceived % 16));
+//                }else{
+//                    irState.loword &= ~(1 << (irState.bitsReceived % 16));
+//                }
+//            }
+
             if (irState.bitsReceived === 32) {
     			serial.writeNumber( irState.vender );
     			serial.writeString( ":" );
@@ -154,7 +152,6 @@ namespace KRC_IR {
             break;
 
           case 2: // Panasonic
-#if 1
             if (irState.bitsReceived <= 16) {
                 irState.exword = (irState.exword << 1) + bit;
             } else if (irState.bitsReceived <= 32) {
@@ -162,27 +159,26 @@ namespace KRC_IR {
             } else if (irState.bitsReceived <= 48) {
                 irState.loword = (irState.loword << 1) + bit;
             }
-#else
-            if (irState.bitsReceived <= 16) {
-                if( bit === 1 ){
-                    irState.exword |= (1 << (irState.bitsReceived % 16));
-                }else{
-                    irState.exword &= ~(1 << (irState.bitsReceived % 16));
-                }
-            } else if (irState.bitsReceived <= 32) {
-                if( bit === 1 ){
-                    irState.hiword |= (1 << (irState.bitsReceived % 16));
-                }else{
-                    irState.hiword &= ~(1 << (irState.bitsReceived % 16));
-                }
-            } else if (irState.bitsReceived <= 48) {
-                if( bit === 1 ){
-                    irState.loword |= (1 << (irState.bitsReceived % 16));
-                }else{
-                    irState.loword &= ~(1 << (irState.bitsReceived % 16));
-                }
-            }
-#endif
+//            if (irState.bitsReceived <= 16) {
+//                if( bit === 1 ){
+//                    irState.exword |= (1 << (irState.bitsReceived % 16));
+//                }else{
+//                    irState.exword &= ~(1 << (irState.bitsReceived % 16));
+//                }
+//            } else if (irState.bitsReceived <= 32) {
+//                if( bit === 1 ){
+//                    irState.hiword |= (1 << (irState.bitsReceived % 16));
+//                }else{
+//                    irState.hiword &= ~(1 << (irState.bitsReceived % 16));
+//                }
+//            } else if (irState.bitsReceived <= 48) {
+//                if( bit === 1 ){
+//                    irState.loword |= (1 << (irState.bitsReceived % 16));
+//                }else{
+//                    irState.loword &= ~(1 << (irState.bitsReceived % 16));
+//                }
+//            }
+
             if (irState.bitsReceived === 48) {
     			serial.writeNumber( irState.vender );
     			serial.writeString( ":" );
@@ -204,27 +200,25 @@ namespace KRC_IR {
             break;
 
           case 3: // SONY
-#if 1
             if (irState.bitsReceived <= 16) {
                 irState.hiword = (irState.hiword << 1) + bit;
             } else if (irState.bitsReceived <= 32) {
                 irState.loword = (irState.loword << 1) + bit;
             }
-#else
-            if (irState.bitsReceived <= 16) {
-                if( bit === 1 ){
-                    irState.hiword |= (1 << (irState.bitsReceived % 16));
-                }else{
-                    irState.hiword &= ~(1 << (irState.bitsReceived % 16));
-                }
-            } else if (irState.bitsReceived <= 32) {
-                if( bit === 1 ){
-                    irState.loword |= (1 << (irState.bitsReceived % 16));
-                }else{
-                    irState.loword &= ~(1 << (irState.bitsReceived % 16));
-                }
-            }
-#endif
+//            if (irState.bitsReceived <= 16) {
+//                if( bit === 1 ){
+//                    irState.hiword |= (1 << (irState.bitsReceived % 16));
+//                }else{
+//                    irState.hiword &= ~(1 << (irState.bitsReceived % 16));
+//                }
+//            } else if (irState.bitsReceived <= 32) {
+//                if( bit === 1 ){
+//                    irState.loword |= (1 << (irState.bitsReceived % 16));
+//                }else{
+//                    irState.loword &= ~(1 << (irState.bitsReceived % 16));
+//                }
+//            }
+
 	        if (irState.bitsReceived === 12) {
     			serial.writeNumber( irState.vender );
     			serial.writeString( ":" );
