@@ -154,6 +154,7 @@ namespace KRC_IR {
               irState.firstdata = false;
             }
 			irState.state = 0;
+		    irState.vender = 0;
             return IR_DATAGRAM;
         } else {
             return IR_INCOMPLETE;
@@ -186,6 +187,12 @@ namespace KRC_IR {
             return appendBitToDatagram(1);
           }
         }
+
+		//連続できたとき
+		if (irState.vender > 0) {
+			irState.bitsReceived = 0;
+            return IR_INCOMPLETE;
+		}
 
 			serial.writeString( "Bit err: " );
 		    serial.writeNumber( markAndSpace );
