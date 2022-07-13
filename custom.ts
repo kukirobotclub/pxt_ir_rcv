@@ -244,7 +244,6 @@ namespace KRC_IR {
         pins.onPulsed(pin, PulseValue.Low, () => {
             // HIGH, see https://github.com/microsoft/pxt-microbit/issues/1416
             mark = pins.pulseDuration();
-            irState.bitTime = control.millis();
 			//debug pin
 			//pins.digitalWritePin(DigitalPin.P0, 0);
         });
