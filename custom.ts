@@ -153,7 +153,7 @@ namespace KRC_IR {
               irState.commandSectionBits = irState.loword & 0xffff;
               irState.firstdata = false;
             }
-			irState.state = 1;
+			irState.state = 0;
             return IR_DATAGRAM;
         } else {
             return IR_INCOMPLETE;
@@ -215,14 +215,17 @@ namespace KRC_IR {
         if (markAndSpace >= 2100 && markAndSpace <= 3900) {
 		    irState.vender = 3;	//SONY
 			irState.state = 1;
+                irState.firstdata = true;
 		}
         if (markAndSpace > 3900 && markAndSpace <= 6240) {
 		    irState.vender = 2;	//Panasonic
 			irState.state = 1;
+                irState.firstdata = true;
 		}
         if (markAndSpace >= 9450 && markAndSpace <= 15000) {
 		    irState.vender = 1;	//NEC
 			irState.state = 1;
+                irState.firstdata = true;
 		}
         //if (irState.vender === 0) {	//error
 		//	serial.writeString( "Leader err: " );
@@ -525,7 +528,7 @@ namespace KRC_IR {
             const now = input.runningTime();
             if (now > irState.repeatTimeout) {
                 // repeat timed out
-                //irState.firstdata = true;
+                irState.firstdata = true;
                 const handler = irState.onIrButtonReleased.find(h => h.irButton === irState.activeCommand || IrButton.Any === h.irButton);
                 if (handler) {
                     background.schedule(handler.onEvent, background.Thread.UserCallback, background.Mode.Once, 0);
