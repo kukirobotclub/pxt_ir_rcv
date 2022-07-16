@@ -6,18 +6,14 @@
 //% weight=100 color=#0fbc11 icon="\uf013"
 namespace KRC_IR {
 
-    let irWork: IrWork;
-
-    interface IrWork {
-        irType: number;			// NEC,PNASONIC,SONY
-        state: number;		// 受信フェーズ　0:Leader待ち 1:ビット受信中 2:受信完了
-        bits: uint8;			// 受信ビットカウンタ
-        work_buff: number[] = []
-        tm_now: number;
-        tm_off: number;
-        tm_dur: number;
-        tm_last: number;
-    }
+    let irType = 0			// NEC,PNASONIC,SONY
+    let state = 0		// 受信フェーズ　0:Leader待ち 1:ビット受信中 2:受信完了
+    let bits = 0			// 受信ビットカウンタ
+    let work_buff: number[] = []
+    let tm_now = 0
+    let tm_off = 0
+    let tm_dur = 0
+    let tm_last = 0
 
 
     function toHexChar(decimal: number): string {
@@ -30,71 +26,71 @@ namespace KRC_IR {
 
     function clear_buff(): void {
         for (let i = 0; i <= 7; i++) {
-            irWork.work_buff[i] = 0
+            work_buff[i] = 0
         }
     }
 
     function make_data(bit_data: number): void {
-        if (irWork.bits < 64) {
+        if (bits < 64) {
             if (bit_data) {
-                irWork.work_buff[irWork.bits / 8] |= (1 << (irWork.bits % 8));
+                work_buff[bits / 8] |= (1 << (bits % 8));
             } else {
-                irWork.work_buff[irWork.bits / 8] &= ~(1 << (irWork.bits % 8));
+                work_buff[bits / 8] &= ~(1 << (bits % 8));
             }
-            irWork.bits = irWork.bits + 1
+            bits = bits + 1
         }
     }
 
     function check_pulse(tm_on_off: number, tm_duration: number): void {
-        if (irWork.state === 0) {	// Leader
+        if (state === 0) {	// Leader
             if (tm_on_off >= 420 && tm_on_off <= 780) {
-                irWork.irType = 3;	//SONY
-                irWork.state = 1;
+                irType = 3;	//SONY
+                state = 1;
             }
             if (tm_on_off > 1120 && tm_on_off <= 2080) {
-                irWork.irType = 2;	//Panasonic
-                irWork.state = 1;
+                irType = 2;	//Panasonic
+                state = 1;
             }
             if (tm_on_off >= 3150 && tm_on_off <= 5850) {
-                irWork.irType = 1;	//NEC
-                irWork.state = 1;
+                irType = 1;	//NEC
+                state = 1;
             }
-        } else if (irWork.state === 1) { // reciving bit
-            if (irWork.irType === 1) { // NEC
+        } else if (state === 1) { // reciving bit
+            if (irType === 1) { // NEC
                 // NEC  "0" 1120 "1" 2250
                 if (tm_on_off < 1125) {            // low bit
                     make_data(0);
                 } else if (tm_on_off < 2197) {	     // high bit
                     make_data(1);
                 }
-                if (irWork.bits >= 32) {
-                    irWork.state = 2
+                if (bits >= 32) {
+                    state = 2
                 }
             }
-            if (irWork.irType === 2) { // Panasonic
+            if (irType === 2) { // Panasonic
                 // Panasonic "0" 800 "1" 1600
                 if (tm_on_off < 800) {            // low bit
                     make_data(0);
                 } else if (tm_on_off < 1560) {	     // high bit
                     make_data(1);
                 }
-                if (irWork.bits >= 48) {
-                    irWork.state = 2
+                if (bits >= 48) {
+                    state = 2
                 }
             }
-            if (irWork.irType === 3) { // SONY
+            if (irType === 3) { // SONY
                 // SONY  "0" 1200 "1" 1800
                 if (tm_duration < 1500) {            // low bit
                     make_data(0);
                 } else if (tm_duration < 2400) {	     // high bit
                     make_data(1);
                 }
-                if (irWork.bits >= 12) {
-                    irWork.state = 2
+                if (bits >= 12) {
+                    state = 2
                 }
             }
             if (tm_on_off > 2700) {
-                irWork.state = 3;
+                state = 3;
             }
         }
     }
@@ -105,11 +101,11 @@ namespace KRC_IR {
 
         pins.onPulsed(pin, PulseValue.High, () => {
             // LOW
-            irWork.tm_now = control.micros()
-            irWork.tm_off = pins.pulseDuration()
-            irWork.tm_dur = irWork.tm_now - irWork.tm_last
-            irWork.tm_last = irWork.tm_now
-            check_pulse(irWork.tm_off, irWork.tm_dur)
+            tm_now = control.micros()
+            tm_off = pins.pulseDuration()
+            tm_dur = tm_now - tm_last
+            tm_last = tm_now
+            check_pulse(tm_off, tm_dur)
 			//debug pin
 			//pins.digitalWritePin(DigitalPin.P0, 1);
 
@@ -123,15 +119,13 @@ namespace KRC_IR {
 
     function initIrWork() {
 
-        irWork = {
-            irType: 0,			// NEC,PNASONIC,SONY
-            state: 0,		// 受信フェーズ　0:Leader待ち 1:ビット受信中 2:受信完了
-            bits: 0,			// 受信ビットカウンタ
-            tm_now: 0,
-            tm_off: 0,
-            tm_dur: 0,
-            tm_last: 0,
-        };
+        irType = 0			// NEC,PNASONIC,SONY
+        state = 0		// 受信フェーズ　0:Leader待ち 1:ビット受信中 2:受信完了
+        bits = 0			// 受信ビットカウンタ
+        tm_now = 0
+        tm_off = 0
+        tm_dur = 0
+        tm_last = 0
         clear_buff()
     }
 
@@ -164,14 +158,14 @@ namespace KRC_IR {
     //% weight=30
     export function irHex(): string {
 		let str = ""
-        if (irWork.irType === 1) { // NEC
-            str = byte2hex(irWork.work_buff[2]) + byte2hex(irWork.work_buff[3])
+        if (irType === 1) { // NEC
+            str = byte2hex(work_buff[2]) + byte2hex(work_buff[3])
         }
-        if (irWork.irType === 2) { // Panasonic
-            str = byte2hex(irWork.work_buff[4]) + byte2hex(irWork.work_buff[5])
+        if (irType === 2) { // Panasonic
+            str = byte2hex(work_buff[4]) + byte2hex(work_buff[5])
         }
-        if (irWork.irType === 3) { // SONY
-            str = byte2hex(irWork.work_buff[0]) + byte2hex(irWork.work_buff[1])
+        if (irType === 3) { // SONY
+            str = byte2hex(work_buff[0]) + byte2hex(work_buff[1])
         }
         initIrWork();
         return str
@@ -183,16 +177,16 @@ namespace KRC_IR {
     //% blockId=ir_recieved_address_command
     //% block="IR address command"
     //% weight=31
-    export function irCommand(): number {
+    export function irAddressCommand(): number {
         let cmd = 0;
-        if (irWork.irType === 1) { // NEC
-            cmd = irWork.work_buff[2]*256+irWork.work_buff[3]
+        if (irType === 1) { // NEC
+            cmd = work_buff[2]*256+work_buff[3]
         }
-        if (irWork.irType === 2) { // Panasonic
-            cmd = irWork.work_buff[4]*256+irWork.work_buff[5]
+        if (irType === 2) { // Panasonic
+            cmd = work_buff[4]*256+work_buff[5]
         }
-        if (irWork.irType === 3) { // SONY
-            cmd = irWork.work_buff[0]
+        if (irType === 3) { // SONY
+            cmd = work_buff[0]
         }
         initIrWork();
         return cmd
@@ -206,14 +200,14 @@ namespace KRC_IR {
     //% weight=32
     export function irCommand(): number {
         let cmd = 0;
-        if (irWork.irType === 1) { // NEC
-            cmd = irWork.work_buff[2]
+        if (irType === 1) { // NEC
+            cmd = work_buff[2]
         }
-        if (irWork.irType === 2) { // Panasonic
-            cmd = irWork.work_buff[4]
+        if (irType === 2) { // Panasonic
+            cmd = work_buff[4]
         }
-        if (irWork.irType === 3) { // SONY
-            cmd = irWork.work_buff[0]
+        if (irType === 3) { // SONY
+            cmd = work_buff[0]
         }
         initIrWork();
         return cmd
@@ -226,7 +220,7 @@ namespace KRC_IR {
     //% block="IR data was received"
     //% weight=80
     export function irDataReceived(): boolean {
-        if (irState.state === 2) {
+        if (state === 2) {
             return true;
         } else {
             return false;
