@@ -1,31 +1,41 @@
 
-> このページを開く [https://somasai.github.io/robotcoders_ir_receiver/](https://somasai.github.io/robotcoders_ir_receiver/)
+## リモコン受信
 
-## 拡張機能として使用
-
-このリポジトリは、MakeCode で **拡張機能** として追加できます。
+ **拡張機能** としてリモコン受信を追加できます。
 
 * [https://makecode.microbit.org/](https://makecode.microbit.org/) を開く
 * **新しいプロジェクト** をクリックしてください
 * ギアボタンメニューの中にある **拡張機能** をクリックしてください
-* **https://github.com/somasai/robotcoders_ir_receiver** を検索してインポートします。
+* **https://github.com/kukirobotclub/pxt_ir_rcv** を検索してインポートします。
 
-## このプロジェクトを編集します ![ビルド ステータス バッジ](https://github.com/somasai/robotcoders_ir_receiver/workflows/MakeCode/badge.svg)
+## 追加されるブロック
+<img src="Block_jpn.PNG" style="zoom:50%;" />
 
-MakeCode でこのリポジトリを編集します。
+### １．まず手持ちのリモコンで、使いたいボタンの番号を調べる
+以下のコードで最大３桁の番号を記録する
 
-* [https://makecode.microbit.org/](https://makecode.microbit.org/) を開く
-* **読み込む** をクリックし、 **URLから読み込む...** をクリックしてください
-* **https://github.com/somasai/robotcoders_ir_receiver** を貼り付けてインポートをクリックしてください
+<img src="IR_read_cmd.PNG" style="zoom:50%;" />
 
-## ブロックのプレビュー
+* 手元のリモコンの使いたいボタンを押すと、LED画面に最大３つの番号が出るので、記録しておく
+* ボタンを押す間隔は長めにする
+* 使う可能性のあるボタンは全部記録しておくと良い
 
-この画像はマスター内の最後のコミットからのブロックコードを示しています。
-このイメージは更新に数分かかる場合があります。
+### １.５．使いたいボタンの番号を調べる（別方法）
+特定のリモコンで、どのボタンでも同じ番号になる。
+番号が最大５桁になる。
 
-![生成されたブロック](https://github.com/somasai/robotcoders_ir_receiver/raw/master/.github/makecode/blocks.png)
+<img src="IR_read_data.PNG" style="zoom:50%;" />
 
-#### メタデータ (検索、レンダリングに使用)
+#### ２．リモコンで指示をするプログラムを作成する
+調べた番号を使って、押したボタンによって動くプログラムを作る
+以下の例は、↑＝244、↓＝245 とわかったので、そのボタンで矢印を表示するもの
 
-* for PXT/microbit
-<script src="https://makecode.com/gh-pages-embed.js"></script><script>makeCodeRender("{{ site.makecode.home_url }}", "{{ site.github.owner_name }}/{{ site.github.repository_name }}");</script>
+<img src="sample_code.PNG" style="zoom:50%;" />
+
+
+
+------
+●動作確認済み
+NECリモコン
+PanasonicのDVDレコーダーリモコン
+SONYのTVリモコン
