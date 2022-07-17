@@ -14,7 +14,7 @@ namespace KRC_IR {
     let tm_off = 0
     let tm_dur = 0
     let tm_last = 0
-
+    let dbg_pls = 0
 
     function toHexChar(decimal: number): string {
         return "0123456789ABCDEF".charAt(decimal)
