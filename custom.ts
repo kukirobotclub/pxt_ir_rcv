@@ -14,7 +14,7 @@ namespace KRC_IR {
     let tm_off = 0
     let tm_dur = 0
     let tm_last = 0
-    let dbg_pls = 0
+    //let dbg_pls = 0
 
     function toHexChar(decimal: number): string {
         return "0123456789ABCDEF".charAt(decimal)
@@ -85,13 +85,15 @@ namespace KRC_IR {
                 } else if (tm_duration < 2400) {	     // high bit
                     make_data(1);
                 }
-                if (bits >= 12) {
+                if (bits >= 11) {
                     state = 2
                 }
             }
             if (tm_on_off > 2700) {
                 state = 3;
 				serial.writeString("OV ")
+				serial.writeNumber(tm_on_off)
+				serial.writeLine("")
             }
         }
     }
@@ -108,14 +110,14 @@ namespace KRC_IR {
             tm_last = tm_now
             check_pulse(tm_off, tm_dur)
 			//debug pin
-			pins.digitalWritePin(DigitalPin.P0, dbg_pls);
-			dbg_pls = (~dbg_pls) & 1
+			//pins.digitalWritePin(DigitalPin.P0, dbg_pls);
+			//dbg_pls = (~dbg_pls) & 1
 
         });
 
 		//debug pin
-		pins.digitalWritePin(DigitalPin.P0, 1);
-        dbg_pls = 0
+		//pins.digitalWritePin(DigitalPin.P0, 1);
+        //dbg_pls = 0
 
     }
 
@@ -138,7 +140,7 @@ namespace KRC_IR {
      * @param pin IR receiver pin, eg: DigitalPin.P0
      */
     //% blockId="ir_connect_receiver"
-    //% block="connect IR receiver at pin %pin "
+    //% block="IRセンサーを %pin に接続"			//"connect IR receiver at pin %pin "
     //% pin.fieldEditor="gridpicker"
     //% pin.fieldOptions.columns=4
     //% pin.fieldOptions.tooltips="false"
@@ -178,7 +180,7 @@ namespace KRC_IR {
      * Returns the IR ddress-command as 16-bit binary.
      */
     //% blockId=ir_recieved_address_command
-    //% block="IR address command"
+    //% block="IRデータ"			//"IR address command"
     //% weight=31
     export function irAddressCommand(): number {
         let cmd = 0;
@@ -199,7 +201,7 @@ namespace KRC_IR {
      * Returns the IR command as 8-bit binary.
      */
     //% blockId=ir_recieved_command
-    //% block="IR command"
+    //% block="IRコマンド"		//"IR command"
     //% weight=32
     export function irCommand(): number {
         let cmd = 0;
@@ -220,10 +222,10 @@ namespace KRC_IR {
      * Returns true if any IR data was received since the last call of this function. False otherwise.
      */
     //% blockId=ir_received
-    //% block="IR data was received"
+    //% block="IR受信？"		//"IR data was received"
     //% weight=80
     export function irDataReceived(): boolean {
-        if (state === 2) {
+        if (state >= 2) {
             return true;
         } else {
             return false;
@@ -235,7 +237,7 @@ namespace KRC_IR {
      */
     //% blockId=ir_state
     //% block="IR status"
-    //% weight=80
+    //% weight=10
     export function irState(): number {
         return state
     }
