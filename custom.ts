@@ -3,7 +3,7 @@
 /**
  * Custom blocks
  */
-//% weight=100 color=#0fbc11 icon="\uf013"
+//% weight=100 color=#bc0f11 icon="\uf09e"
 namespace KRC_IR {
 
     let irType = 0			// NEC,PNASONIC,SONY
@@ -91,6 +91,7 @@ namespace KRC_IR {
             }
             if (tm_on_off > 2700) {
                 state = 3;
+				serial.writeString("OV ")
             }
         }
     }
@@ -107,12 +108,14 @@ namespace KRC_IR {
             tm_last = tm_now
             check_pulse(tm_off, tm_dur)
 			//debug pin
-			//pins.digitalWritePin(DigitalPin.P0, 1);
+			pins.digitalWritePin(DigitalPin.P0, dbg_pls);
+			dbg_pls = (~dbg_pls) & 1
 
         });
 
 		//debug pin
-		//pins.digitalWritePin(DigitalPin.P0, 1);
+		pins.digitalWritePin(DigitalPin.P0, 1);
+        dbg_pls = 0
 
     }
 
@@ -225,6 +228,16 @@ namespace KRC_IR {
         } else {
             return false;
         }
+    }
+
+    /**
+     * Returns state. (DEBUG)
+     */
+    //% blockId=ir_state
+    //% block="IR status"
+    //% weight=80
+    export function irState(): number {
+        return state
     }
 
 
