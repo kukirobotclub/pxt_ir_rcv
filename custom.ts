@@ -1,7 +1,10 @@
-
-
-/**
- * Custom blocks
+/*
+ * PXT for KRC Microbit Control Bord
+ * IR remocon recive
+ * Copyright 2022 Bitcom 
+ *                GNU
+ *
+ * Version 2022-07-17 0.00 初版
  */
 //% weight=100 color=#bc0f11 icon="\uf09e"
 namespace KRC_IR {
@@ -15,6 +18,7 @@ namespace KRC_IR {
     let tm_dur = 0
     let tm_last = 0
     //let dbg_pls = 0
+    let dbg_cnt = 0
 
     function toHexChar(decimal: number): string {
         return "0123456789ABCDEF".charAt(decimal)
@@ -50,6 +54,11 @@ namespace KRC_IR {
             if (tm_on_off > 1120 && tm_on_off <= 2080) {
                 irType = 2;	//Panasonic
                 state = 1;
+            }
+            if (tm_on_off > 2248 && tm_on_off <= 2922 && tm_duration > 7868 && tm_duration <= 14612) {
+                // L4T=2248　1574<2922	H16T+L4T=11240	7868<14612
+                irType = 2;	//Panasonic
+                state = 4;	//repeat
             }
             if (tm_on_off >= 3150 && tm_on_off <= 5850) {
                 irType = 1;	//NEC
@@ -152,6 +161,23 @@ namespace KRC_IR {
         initIrWork();
         enableIrDetection(pin);
 
+        control.inBackground(() => {
+            let cnt = 0
+            while (true) {
+                if( state === 1 ){
+                    cnt = cnt +1
+                    dbg_cnt = dbg_cnt + 1
+                    if( cnt > 10 ){		//20ms*10
+                        initIrWork();
+                        serial.writeLine("TO")
+                    }
+                }else{
+                    cnt = 0
+                }
+                basic.pause(20)
+            }
+        })
+
     }
 
 
@@ -238,9 +264,47 @@ namespace KRC_IR {
     //% blockId=ir_state
     //% block="IR status"
     //% weight=10
+    //% blockHidden=false
     export function irState(): number {
         return state
     }
 
+    /**
+     * Returns bits. (DEBUG)
+     */
+    //% blockId=ir_bits
+    //% block="IR_recieved_bits"
+    //% weight=11
+    //% blockHidden=false
+    export function ir_recieved_bits(): number {
+        return bits
+    }
+
+    /**
+     * Returns all data as hexadecimal string. (DEBUG)
+     */
+    //% blockId=ir_all_hex
+    //% block="IR all hex"
+    //% weight=12
+    //% blockHidden=false
+    export function irAllHex(): string {
+		let str = ""
+        for (let i = 0; i <= (bits+7)/8; i++) {
+            str = str + byte2hex(work_buff[i])
+        }
+        initIrWork();
+        return str
+    }
+
+    /**
+     * Returns counter 20ms tick. (DEBUG)
+     */
+    //% blockId=ir_counter
+    //% block="IR counter"
+    //% weight=10
+    //% blockHidden=false
+    export function irConter(): number {
+        return dbg_cnt
+    }
 
 }
