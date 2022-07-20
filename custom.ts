@@ -53,23 +53,19 @@ namespace KRC_IR {
             if (tm_on_off >= 420 && tm_on_off <= 780) {
                 irType = 3;	//SONY
                 state = 1;
-　　　　　　　　void_cnt = 0
             }
             if (tm_on_off > 1120 && tm_on_off <= 2080) {
                 irType = 2;	//Panasonic
                 state = 1;
-　　　　　　　　void_cnt = 0
             }
             if (tm_on_off > 1574 && tm_on_off <= 2922 && tm_duration > 7868 && tm_duration <= 14612) {
                 // L4T=2248　1574<2922	H16T+L4T=11240	7868<14612
                 irType = 1;	//NEC
                 state = 4;	//repeat
-　　　　　　　　void_cnt = 0
             }
             if (tm_on_off >= 3150 && tm_on_off <= 5850) {
                 irType = 1;	//NEC
                 state = 1;
-　　　　　　　　void_cnt = 0
             }
         } else if (state === 1) { // reciving bit
             if (irType === 1) { // NEC
@@ -115,6 +111,7 @@ namespace KRC_IR {
 				serial.writeLine("")
             }
         }
+　　　　void_cnt = 0
     }
 
 
@@ -188,6 +185,7 @@ namespace KRC_IR {
                 if (void_cnt > 50){		//20ms*10
                     void_cnt = 0
                     last_address_data = 0
+                    serial.writeLine("void")
                 }
                 basic.pause(20)
             }
