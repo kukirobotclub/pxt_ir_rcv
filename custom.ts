@@ -55,7 +55,7 @@ namespace KRC_IR {
                 irType = 2;	//Panasonic
                 state = 1;
             }
-            if (tm_on_off > 2248 && tm_on_off <= 2922 && tm_duration > 7868 && tm_duration <= 14612) {
+            if (tm_on_off > 1574 && tm_on_off <= 2922 && tm_duration > 7868 && tm_duration <= 14612) {
                 // L4T=2248　1574<2922	H16T+L4T=11240	7868<14612
                 irType = 1;	//NEC
                 state = 4;	//repeat
@@ -161,6 +161,9 @@ namespace KRC_IR {
         initIrWork();
         enableIrDetection(pin);
 
+
+    }
+
         control.inBackground(() => {
             let cnt = 0
             while (true) {
@@ -177,9 +180,6 @@ namespace KRC_IR {
                 basic.pause(20)
             }
         })
-
-    }
-
 
     /**
      * Returns the IR ddress-command  as 16-bit hexadecimal string.
@@ -289,10 +289,9 @@ namespace KRC_IR {
     //% blockHidden=false
     export function irAllHex(): string {
 		let str = ""
-        for (let i = 0; i <= (bits+7)/8; i++) {
+        for (let i = 0; i <= (bits-1)/8; i++) {
             str = str + byte2hex(work_buff[i])
         }
-        initIrWork();
         return str
     }
 
