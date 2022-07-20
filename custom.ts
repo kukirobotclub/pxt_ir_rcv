@@ -57,7 +57,7 @@ namespace KRC_IR {
             }
             if (tm_on_off > 2248 && tm_on_off <= 2922 && tm_duration > 7868 && tm_duration <= 14612) {
                 // L4T=2248　1574<2922	H16T+L4T=11240	7868<14612
-                irType = 2;	//Panasonic
+                irType = 1;	//NEC
                 state = 4;	//repeat
             }
             if (tm_on_off >= 3150 && tm_on_off <= 5850) {
@@ -164,9 +164,9 @@ namespace KRC_IR {
         control.inBackground(() => {
             let cnt = 0
             while (true) {
+                dbg_cnt = dbg_cnt + 1
                 if( state === 1 ){
                     cnt = cnt +1
-                    dbg_cnt = dbg_cnt + 1
                     if( cnt > 10 ){		//20ms*10
                         initIrWork();
                         serial.writeLine("TO")
@@ -303,7 +303,7 @@ namespace KRC_IR {
     //% block="IR counter"
     //% weight=10
     //% blockHidden=false
-    export function irConter(): number {
+    export function irCounter(): number {
         return dbg_cnt
     }
 
