@@ -5,6 +5,7 @@
  *                GNU
  *
  * Version 2022-07-17 0.00 初版
+ * Version 2022-07-20 1.00 NECリピート対応、デバッグ用全データ、ビット数
  */
 //% weight=100 color=#bc0f11 icon="\uf09e"
 namespace KRC_IR {
@@ -13,10 +14,12 @@ namespace KRC_IR {
     let state = 0		// 受信フェーズ　0:Leader待ち 1:ビット受信中 2:受信完了
     let bits = 0			// 受信ビットカウンタ
     let work_buff: number[] = []
+    let last_address_data = 0	// 前回受信したデータ
     let tm_now = 0
     let tm_off = 0
     let tm_dur = 0
     let tm_last = 0
+    let void_cnt = 0		// 無操作カウンタ
     //let dbg_pls = 0
     let dbg_cnt = 0
 
@@ -50,19 +53,23 @@ namespace KRC_IR {
             if (tm_on_off >= 420 && tm_on_off <= 780) {
                 irType = 3;	//SONY
                 state = 1;
+　　　　　　　　void_cnt = 0
             }
             if (tm_on_off > 1120 && tm_on_off <= 2080) {
                 irType = 2;	//Panasonic
                 state = 1;
+　　　　　　　　void_cnt = 0
             }
             if (tm_on_off > 1574 && tm_on_off <= 2922 && tm_duration > 7868 && tm_duration <= 14612) {
                 // L4T=2248　1574<2922	H16T+L4T=11240	7868<14612
                 irType = 1;	//NEC
                 state = 4;	//repeat
+　　　　　　　　void_cnt = 0
             }
             if (tm_on_off >= 3150 && tm_on_off <= 5850) {
                 irType = 1;	//NEC
                 state = 1;
+　　　　　　　　void_cnt = 0
             }
         } else if (state === 1) { // reciving bit
             if (irType === 1) { // NEC
@@ -73,6 +80,7 @@ namespace KRC_IR {
                     make_data(1);
                 }
                 if (bits >= 32) {
+                    last_address_data = work_buff[2]*256+work_buff[3]
                     state = 2
                 }
             }
@@ -84,6 +92,7 @@ namespace KRC_IR {
                     make_data(1);
                 }
                 if (bits >= 48) {
+                    last_address_data = work_buff[4]*256+work_buff[5]
                     state = 2
                 }
             }
@@ -95,6 +104,7 @@ namespace KRC_IR {
                     make_data(1);
                 }
                 if (bits >= 11) {
+                    last_address_data = work_buff[0]*256+work_buff[1]
                     state = 2
                 }
             }
@@ -161,9 +171,6 @@ namespace KRC_IR {
         initIrWork();
         enableIrDetection(pin);
 
-
-    }
-
         control.inBackground(() => {
             let cnt = 0
             while (true) {
@@ -177,30 +184,17 @@ namespace KRC_IR {
                 }else{
                     cnt = 0
                 }
+　　　　　　　　void_cnt = void_cnt + 1
+                if (void_cnt > 50){		//20ms*10
+                    void_cnt = 0
+                    last_address_data = 0
+                }
                 basic.pause(20)
             }
         })
 
-    /**
-     * Returns the IR ddress-command  as 16-bit hexadecimal string.
-     */
-    //% blockId=ir_recieved_address_command_hex
-    //% block="IR hex"
-    //% weight=30
-    export function irHex(): string {
-		let str = ""
-        if (irType === 1) { // NEC
-            str = byte2hex(work_buff[2]) + byte2hex(work_buff[3])
-        }
-        if (irType === 2) { // Panasonic
-            str = byte2hex(work_buff[4]) + byte2hex(work_buff[5])
-        }
-        if (irType === 3) { // SONY
-            str = byte2hex(work_buff[0]) + byte2hex(work_buff[1])
-        }
-        initIrWork();
-        return str
     }
+
 
     /**
      * Returns the IR ddress-command as 16-bit binary.
@@ -209,18 +203,19 @@ namespace KRC_IR {
     //% block="IRデータ"			//"IR address command"
     //% weight=31
     export function irAddressCommand(): number {
-        let cmd = 0;
-        if (irType === 1) { // NEC
-            cmd = work_buff[2]*256+work_buff[3]
-        }
-        if (irType === 2) { // Panasonic
-            cmd = work_buff[4]*256+work_buff[5]
-        }
-        if (irType === 3) { // SONY
-            cmd = work_buff[0]
-        }
+//        let cmd = 0;
+//        if (irType === 1) { // NEC
+//            cmd = work_buff[2]*256+work_buff[3]
+//        }
+//        if (irType === 2) { // Panasonic
+//            cmd = work_buff[4]*256+work_buff[5]
+//        }
+//        if (irType === 3) { // SONY
+//            cmd = work_buff[0]
+//        }
         initIrWork();
-        return cmd
+//        return cmd
+        return last_address_data
     }
 
     /**
@@ -230,18 +225,19 @@ namespace KRC_IR {
     //% block="IRコマンド"		//"IR command"
     //% weight=32
     export function irCommand(): number {
-        let cmd = 0;
-        if (irType === 1) { // NEC
-            cmd = work_buff[2]
-        }
-        if (irType === 2) { // Panasonic
-            cmd = work_buff[4]
-        }
-        if (irType === 3) { // SONY
-            cmd = work_buff[0]
-        }
+//        let cmd = 0;
+//        if (irType === 1) { // NEC
+//            cmd = work_buff[2]
+//        }
+//        if (irType === 2) { // Panasonic
+//            cmd = work_buff[4]
+//        }
+//        if (irType === 3) { // SONY
+//            cmd = work_buff[0]
+//        }
         initIrWork();
-        return cmd
+//        return cmd
+        return (last_address_data>>8)&255
     }
 
     /**
