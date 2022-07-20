@@ -182,10 +182,10 @@ namespace KRC_IR {
                     cnt = 0
                 }
 　　　　　　　　void_cnt = void_cnt + 1
-                if (void_cnt > 50){		//20ms*10
-                    void_cnt = 0
+                if (void_cnt === 10){		//20ms*10
+                    //void_cnt = 0
                     last_address_data = 0
-                    serial.writeLine("void")
+                    //serial.writeLine("void")
                 }
                 basic.pause(20)
             }
