@@ -6,6 +6,7 @@
  *
  * Version 2022-07-17 0.00 初版
  * Version 2022-07-20 1.00 NECリピート対応、デバッグ用全データ、ビット数
+ * Version 2022-07-22 1.01 バイトオーダー変更
  */
 //% weight=100 color=#bc0f11 icon="\uf09e"
 namespace KRC_IR {
@@ -20,7 +21,6 @@ namespace KRC_IR {
     let tm_dur = 0
     let tm_last = 0
     let void_cnt = 0		// 無操作カウンタ
-    //let dbg_pls = 0
     let dbg_cnt = 0
 
     function toHexChar(decimal: number): string {
@@ -76,7 +76,7 @@ namespace KRC_IR {
                     make_data(1);
                 }
                 if (bits >= 32) {
-                    last_address_data = work_buff[2]*256+work_buff[3]
+                    last_address_data = work_buff[2]+work_buff[3]*256
                     state = 2
                 }
             }
@@ -88,7 +88,7 @@ namespace KRC_IR {
                     make_data(1);
                 }
                 if (bits >= 48) {
-                    last_address_data = work_buff[4]*256+work_buff[5]
+                    last_address_data = work_buff[4]+work_buff[5]*256
                     state = 2
                 }
             }
@@ -100,7 +100,7 @@ namespace KRC_IR {
                     make_data(1);
                 }
                 if (bits >= 11) {
-                    last_address_data = work_buff[0]*256+work_buff[1]
+                    last_address_data = work_buff[0]+work_buff[1]*256
                     state = 2
                 }
             }
@@ -125,21 +125,11 @@ namespace KRC_IR {
             tm_dur = tm_now - tm_last
             tm_last = tm_now
             check_pulse(tm_off, tm_dur)
-			//debug pin
-			//pins.digitalWritePin(DigitalPin.P0, dbg_pls);
-			//dbg_pls = (~dbg_pls) & 1
-
         });
-
-		//debug pin
-		//pins.digitalWritePin(DigitalPin.P0, 1);
-        //dbg_pls = 0
-
     }
 
 
     function initIrWork() {
-
         irType = 0			// NEC,PNASONIC,SONY
         state = 0		// 受信フェーズ　0:Leader待ち 1:ビット受信中 2:受信完了
         bits = 0			// 受信ビットカウンタ
@@ -190,7 +180,6 @@ namespace KRC_IR {
                 basic.pause(20)
             }
         })
-
     }
 
 
@@ -199,20 +188,9 @@ namespace KRC_IR {
      */
     //% blockId=ir_recieved_address_command
     //% block="IRデータ"			//"IR address command"
-    //% weight=31
+    //% weight=71
     export function irAddressCommand(): number {
-//        let cmd = 0;
-//        if (irType === 1) { // NEC
-//            cmd = work_buff[2]*256+work_buff[3]
-//        }
-//        if (irType === 2) { // Panasonic
-//            cmd = work_buff[4]*256+work_buff[5]
-//        }
-//        if (irType === 3) { // SONY
-//            cmd = work_buff[0]
-//        }
         initIrWork();
-//        return cmd
         return last_address_data
     }
 
@@ -221,21 +199,10 @@ namespace KRC_IR {
      */
     //% blockId=ir_recieved_command
     //% block="IRコマンド"		//"IR command"
-    //% weight=32
+    //% weight=72
     export function irCommand(): number {
-//        let cmd = 0;
-//        if (irType === 1) { // NEC
-//            cmd = work_buff[2]
-//        }
-//        if (irType === 2) { // Panasonic
-//            cmd = work_buff[4]
-//        }
-//        if (irType === 3) { // SONY
-//            cmd = work_buff[0]
-//        }
         initIrWork();
-//        return cmd
-        return (last_address_data>>8)&255
+        return (last_address_data & 255)
     }
 
     /**
@@ -257,7 +224,7 @@ namespace KRC_IR {
      */
     //% blockId=ir_state
     //% block="IR status"
-    //% weight=10
+    //% weight=11
     //% blockHidden=false
     export function irState(): number {
         return state
@@ -268,7 +235,7 @@ namespace KRC_IR {
      */
     //% blockId=ir_bits
     //% block="IR_recieved_bits"
-    //% weight=11
+    //% weight=12
     //% blockHidden=false
     export function ir_recieved_bits(): number {
         return bits
@@ -279,11 +246,11 @@ namespace KRC_IR {
      */
     //% blockId=ir_all_hex
     //% block="IR all hex"
-    //% weight=12
+    //% weight=13
     //% blockHidden=false
     export function irAllHex(): string {
 		let str = ""
-        for (let i = 0; i <= (bits-1)/8; i++) {
+        for (let i = (bits-1)/8; i >= 0; i--) {
             str = str + byte2hex(work_buff[i])
         }
         return str
