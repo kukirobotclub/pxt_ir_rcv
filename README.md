@@ -36,6 +36,7 @@
 
 ------
 ●動作確認済み　
+
 NECリモコン　
 PanasonicのDVDレコーダーリモコン　
 SONYのTVリモコン　
@@ -45,3 +46,11 @@ SONYのTVリモコン　
 センサー接続方法
 
 ![](sensor_conection.jpg)
+
+
+
+------
+
+Copyright 2022 KRC / Bitcom
+
+Out workshop https://kuki-robot-club.localinfo.jp/
