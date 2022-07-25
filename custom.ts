@@ -70,7 +70,7 @@ namespace KRC_IR {
                 irType = 1;	//NEC
                 state = 1;
             }
-            break:
+            break;
           case 1:	// reciving bit
             if (irType === 1) { // NEC
                 // NEC  "0" 1120 "1" 2250
