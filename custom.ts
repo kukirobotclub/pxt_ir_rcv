@@ -7,6 +7,7 @@
  * Version 2022-07-17 0.00 初版
  * Version 2022-07-20 1.00 NECリピート対応、デバッグ用全データ、ビット数
  * Version 2022-07-22 1.01 バイトオーダー変更
+ * Version 2022-07-25 1.02 シリアル出力を全部コメント
  */
 //% weight=100 color=#bc0f11 icon="\uf09e"
 namespace KRC_IR {
@@ -106,9 +107,9 @@ namespace KRC_IR {
             }
             if (tm_on_off > 2700) {
                 state = 3;
-				serial.writeString("OV ")
-				serial.writeNumber(tm_on_off)
-				serial.writeLine("")
+				//serial.writeString("OV ")
+				//serial.writeNumber(tm_on_off)
+				//serial.writeLine("")
             }
         }
 　　　　void_cnt = 0
@@ -166,7 +167,7 @@ namespace KRC_IR {
                     cnt = cnt +1
                     if( cnt > 10 ){		//20ms*10
                         initIrWork();
-                        serial.writeLine("TO")
+                        //serial.writeLine("TO")
                     }
                 }else{
                     cnt = 0
