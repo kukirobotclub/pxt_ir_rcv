@@ -63,6 +63,7 @@ namespace KRC_IR {
                 // L4T=2248　1574<2922	H16T+L4T=11240	7868<14612
                 irType = 1;	//NEC
                 state = 4;	//repeat
+　　　　        void_cnt = 0
             }
             if (tm_on_off >= 3150 && tm_on_off <= 5850) {
                 irType = 1;	//NEC
@@ -111,8 +112,9 @@ namespace KRC_IR {
 				//serial.writeNumber(tm_on_off)
 				//serial.writeLine("")
             }
+　　　　    void_cnt = 0
         }
-　　　　void_cnt = 0
+　　　　//void_cnt = 0
     }
 
 
