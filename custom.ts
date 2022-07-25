@@ -110,7 +110,7 @@ namespace KRC_IR {
             }
             if (tm_on_off > 2700) {
                 state = 3;
-				//serial.writeString("OV ")
+				serial.writeString("OV ")
 				//serial.writeNumber(tm_on_off)
 				//serial.writeLine("")
             }
@@ -177,7 +177,7 @@ namespace KRC_IR {
                     cnt = cnt +1
                     if( cnt > 10 ){		//20ms*10
                         initIrWork();
-                        //serial.writeLine("TO")
+                        serial.writeLine("TO")
                     }
                 }else{
                     cnt = 0
