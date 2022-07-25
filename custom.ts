@@ -50,7 +50,8 @@ namespace KRC_IR {
     }
 
     function check_pulse(tm_on_off: number, tm_duration: number): void {
-        if (state === 0) {	// Leader
+        switch (state) {
+          case 0:	// Leader
             if (tm_on_off >= 420 && tm_on_off <= 780) {
                 irType = 3;	//SONY
                 state = 1;
@@ -69,7 +70,8 @@ namespace KRC_IR {
                 irType = 1;	//NEC
                 state = 1;
             }
-        } else if (state === 1) { // reciving bit
+            break:
+          case 1:	// reciving bit
             if (irType === 1) { // NEC
                 // NEC  "0" 1120 "1" 2250
                 if (tm_on_off < 1125) {            // low bit
@@ -113,6 +115,13 @@ namespace KRC_IR {
 				//serial.writeLine("")
             }
             void_cnt = 0
+            break;
+          case 4:	// NEC repeat
+            if (tm_on_off > 1574 && tm_on_off <= 2922 && tm_duration > 7868 && tm_duration <= 14612) {
+                // L4T=2248 1574<2922	H16T+L4T=11240	7868<14612
+                void_cnt = 0
+            }
+            break;
         }
     }
 
