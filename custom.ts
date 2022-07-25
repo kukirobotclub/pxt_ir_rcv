@@ -7,13 +7,13 @@
  * Version 2022-07-17 0.00 初版
  * Version 2022-07-20 1.00 NECリピート対応、デバッグ用全データ、ビット数
  * Version 2022-07-22 1.01 バイトオーダー変更
- * Version 2022-07-25 1.02 シリアル出力を全部コメント
+ * Version 2022-07-25 1.02 void_cnt=0の場所変更、シリアル出力を全部コメント
  */
 //% weight=100 color=#bc0f11 icon="\uf09e"
 namespace KRC_IR {
 
     let irType = 0			// NEC,PNASONIC,SONY
-    let state = 0		// 受信フェーズ　0:Leader待ち 1:ビット受信中 2:受信完了
+    let state = 0		// 受信フェーズ 0:Leader待ち 1:ビット受信中 2:受信完了
     let bits = 0			// 受信ビットカウンタ
     let work_buff: number[] = []
     let last_address_data = 0	// 前回受信したデータ
@@ -60,10 +60,10 @@ namespace KRC_IR {
                 state = 1;
             }
             if (tm_on_off > 1574 && tm_on_off <= 2922 && tm_duration > 7868 && tm_duration <= 14612) {
-                // L4T=2248　1574<2922	H16T+L4T=11240	7868<14612
+                // L4T=2248 1574<2922	H16T+L4T=11240	7868<14612
                 irType = 1;	//NEC
                 state = 4;	//repeat
-　　　　        void_cnt = 0
+                void_cnt = 0
             }
             if (tm_on_off >= 3150 && tm_on_off <= 5850) {
                 irType = 1;	//NEC
@@ -112,9 +112,8 @@ namespace KRC_IR {
 				//serial.writeNumber(tm_on_off)
 				//serial.writeLine("")
             }
-　　　　    void_cnt = 0
+            void_cnt = 0
         }
-　　　　//void_cnt = 0
     }
 
 
@@ -134,7 +133,7 @@ namespace KRC_IR {
 
     function initIrWork() {
         irType = 0			// NEC,PNASONIC,SONY
-        state = 0		// 受信フェーズ　0:Leader待ち 1:ビット受信中 2:受信完了
+        state = 0		// 受信フェーズ 0:Leader待ち 1:ビット受信中 2:受信完了
         bits = 0			// 受信ビットカウンタ
         tm_now = 0
         tm_off = 0
@@ -174,7 +173,7 @@ namespace KRC_IR {
                 }else{
                     cnt = 0
                 }
-　　　　　　　　void_cnt = void_cnt + 1
+                void_cnt = void_cnt + 1
                 if (void_cnt === 10){		//20ms*10
                     //void_cnt = 0
                     last_address_data = 0
