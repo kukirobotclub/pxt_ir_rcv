@@ -33,6 +33,10 @@
 <img src="sample_code.PNG" style="zoom:50%;" />
 
 
+------
+#### ３．プログラムの注意
+<img src="causion.jpg" style="zoom:50%;" />
+
 
 ------
 ●動作確認済み　
