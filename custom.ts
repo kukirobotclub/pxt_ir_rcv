@@ -152,7 +152,7 @@ namespace KRC_IR {
     }
 
     function initIrWork() {
-        if (gDebugMode && state ==3) {
+        if (gDebugMode && state  >= 2) {
 			print_irdata()
             serial.writeNumber(bits)
             serial.writeString(": ")
