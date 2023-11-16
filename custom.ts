@@ -47,6 +47,7 @@ namespace KRC_IR {
             serial.writeString(",")
         }
         serial.writeLine("")
+        pulseCnt = 0
     }
 
     function clear_buff(): void {
