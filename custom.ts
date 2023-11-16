@@ -8,7 +8,7 @@
  * Version 2022-07-20 1.00 NECリピート対応、デバッグ用全データ、ビット数
  * Version 2022-07-22 1.01 バイトオーダー変更
  * Version 2022-07-25 1.02 void_cnt=0の場所変更、シリアル出力を全部コメント
- * Version 2023-11-25 2.00 検知ロジック変更onEvent
+ * Version 2023-11-16 2.00 検知ロジック変更onEvent
  */
 //% weight=100 color=#bc0f11 icon="\uf09e"
 namespace KRC_IR {
@@ -85,7 +85,6 @@ namespace KRC_IR {
                 if (tm_on_off > 8000 && tm_on_off <= 11240) {
                     irType = 1;	//NEC
                     state = 4;	//repeat
-                    void_cnt = 0
                 }
                 if (tm_on_off > 11240 && tm_on_off <= 15736) {
                     irType = 1;	//NEC
@@ -137,7 +136,6 @@ namespace KRC_IR {
                         //serial.writeLine("")
                     }
                 }
-                void_cnt = 0
                 break;
             case 4:	// NEC repeat
                 if (tm_on_off > 7868 && tm_on_off <= 14612) {
@@ -153,7 +151,7 @@ namespace KRC_IR {
     }
 
     function initIrWork() {
-        if (gDebugMode && state  >= 2) {
+        if (gDebugMode && state >= 2) {
 			print_irdata()
             serial.writeNumber(bits)
             serial.writeString(": ")
@@ -198,38 +196,33 @@ namespace KRC_IR {
     //% weight=90
     export function connectIrReceiver(
         pin: DigitalPin
-    ): void {
+        ): void {
+
+        for (let i = 0; i < 128; i++) {
+            mark[i] = 0
+            irstate[i] = 0
+        }
 
         initIrWork();
         enableIrDetection(pin);
 
         control.inBackground(() => {
-            let cnt = 0
             while (true) {
                 dbg_cnt = dbg_cnt + 1
-                if (state === 1) {
-                    cnt = cnt + 1
-                    if (cnt > 10) {		//20ms*10
+                if (state > 0) {
+                    void_cnt = void_cnt + 1
+                    if (void_cnt >= 10) {		//20ms*10
+                        irstate[pulseCnt] = state
+                        last_address_data = 0
+                        void_cnt = 0
                         initIrWork();
+                        state = 0;
+                        irType = 0;
+                        bits = 0;
+                        clear_buff();
                         if (gDebugMode) {
                             serial.writeLine("TO")
-							print_irdata()
                         }
-                    }
-                } else {
-                    cnt = 0
-                }
-                void_cnt = void_cnt + 1
-                if (void_cnt === 10) {		//20ms*10
-                    //void_cnt = 0
-                    state = 0;
-                    irType = 0;
-                    bits = 0;
-                    clear_buff();
-                    irstate[pulseCnt] = state
-                    last_address_data = 0
-                    if (gDebugMode) {
-                        serial.writeLine("void")
                     }
                 }
                 basic.pause(20)
@@ -280,7 +273,6 @@ namespace KRC_IR {
     //% blockId=ir_state
     //% block="IR status"
     //% weight=11
-    //% advanced=true
     //% blockHidden=false
     export function irState(): number {
         return state
@@ -292,7 +284,6 @@ namespace KRC_IR {
     //% blockId=ir_bits
     //% block="IR_recieved_bits"
     //% weight=12
-    //% advanced=true
     //% blockHidden=false
     export function ir_recieved_bits(): number {
         return bits
@@ -304,7 +295,6 @@ namespace KRC_IR {
     //% blockId=ir_all_hex
     //% block="IR all hex"
     //% weight=13
-    //% advanced=true
     //% blockHidden=false
     export function irAllHex(): string {
         let str = ""
@@ -320,7 +310,6 @@ namespace KRC_IR {
     //% blockId=ir_counter
     //% block="IR counter"
     //% weight=10
-    //% advanced=true
     //% blockHidden=false
     export function irCounter(): number {
         return dbg_cnt
@@ -332,7 +321,6 @@ namespace KRC_IR {
     //% blockId="ir_debug_mode
     //% block="デバッグモードを |%value に設定"
     //% weight=9
-    //% advanced=true
     //% blockHidden=false
     export function IrDebugMode(value: number): void {
         gDebugMode = value
