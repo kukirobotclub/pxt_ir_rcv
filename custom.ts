@@ -8,19 +8,21 @@
  * Version 2022-07-20 1.00 NECリピート対応、デバッグ用全データ、ビット数
  * Version 2022-07-22 1.01 バイトオーダー変更
  * Version 2022-07-25 1.02 void_cnt=0の場所変更、シリアル出力を全部コメント
+ * Version 2023-11-25 2.00 検知ロジック変更onEvent
  */
 //% weight=100 color=#bc0f11 icon="\uf09e"
 namespace KRC_IR {
 
+    let mark: number[] = []
+    let irstate: number[] = []
+    let gPulseDuration = 0
+    let gPulseDuration_lasttm = 0
+    let pulseCnt = 0
     let irType = 0			// NEC,PNASONIC,SONY
     let state = 0		// 受信フェーズ 0:Leader待ち 1:ビット受信中 2:受信完了
     let bits = 0			// 受信ビットカウンタ
     let work_buff: number[] = []
     let last_address_data = 0	// 前回受信したデータ
-    let tm_now = 0
-    let tm_off = 0
-    let tm_dur = 0
-    let tm_last = 0
     let void_cnt = 0		// 無操作カウンタ
     let dbg_cnt = 0
 
@@ -49,94 +51,88 @@ namespace KRC_IR {
         }
     }
 
-    function check_pulse(tm_on_off: number, tm_duration: number): void {
+    function check_pulse(tm_on_off: number): void {
         switch (state) {
-          case 0:	// Leader
-            if (tm_on_off >= 420 && tm_on_off <= 780) {
-                irType = 3;	//SONY
-                state = 1;
-            }
-            if (tm_on_off > 1120 && tm_on_off <= 2080) {
-                irType = 2;	//Panasonic
-                state = 1;
-            }
-            if (tm_on_off > 1574 && tm_on_off <= 2922 && tm_duration > 7868 && tm_duration <= 14612) {
-                // L4T=2248 1574<2922	H16T+L4T=11240	7868<14612
-                irType = 1;	//NEC
-                state = 4;	//repeat
+            case 0:	// Leader
+                if (tm_on_off >= 2600 && tm_on_off <= 4100) {
+                    irType = 3;	//SONY
+                    state = 1;
+                }
+                if (tm_on_off > 4100 && tm_on_off <= 6000) {
+                    irType = 2;	//Panasonic
+                    state = 1;
+                }
+                if (tm_on_off > 6000 && tm_on_off <= 8000) {
+                    irType = 2;	//Panasonic Repeat	殆ど使われないということ
+                    state = 4;
+                }
+                if (tm_on_off > 8000 && tm_on_off <= 11240) {
+                    irType = 1;	//NEC
+                    state = 4;	//repeat
+                    void_cnt = 0
+                }
+                if (tm_on_off > 11240 && tm_on_off <= 15736) {
+                    irType = 1;	//NEC
+                    state = 1;
+                }
+                break;
+            case 1:	// reciving bit
+                if (irType === 1) { // NEC
+                    // NEC
+                    if (tm_on_off < 1686) {            // low bit
+                        make_data(0);
+                    } else if (tm_on_off < 2600) {	     // high bit
+                        make_data(1);
+                    }
+                    if (bits >= 32) {
+                        last_address_data = work_buff[2] + work_buff[3] * 256
+                        state = 2
+                    }
+                }
+                if (irType === 2) { // Panasonic
+                    // Panasonic
+                    if (tm_on_off < 1200) {            // low bit
+                        make_data(0);
+                    } else if (tm_on_off < 2200) {	     // high bit
+                        make_data(1);
+                    }
+                    if (bits >= 48) {
+                        last_address_data = work_buff[4] + work_buff[5] * 256
+                        state = 2
+                    }
+                }
+                if (irType === 3) { // SONY
+                    // SONY  "0" 1200 "1" 1800
+                    if (tm_on_off < 1500) {            // low bit
+                        make_data(0);
+                    } else if (tm_on_off < 2400) {	     // high bit
+                        make_data(1);
+                    }
+                    if (bits >= 11) {
+                        last_address_data = work_buff[0] + work_buff[1] * 256
+                        state = 2
+                    }
+                }
+                if (tm_on_off >= 2600) {
+                    state = 3;
+                    serial.writeString("OV ")
+                    //serial.writeNumber(tm_on_off)
+                    //serial.writeLine("")
+                }
                 void_cnt = 0
-            }
-            if (tm_on_off >= 3150 && tm_on_off <= 5850) {
-                irType = 1;	//NEC
-                state = 1;
-            }
-            break;
-          case 1:	// reciving bit
-            if (irType === 1) { // NEC
-                // NEC  "0" 1120 "1" 2250
-                if (tm_on_off < 1125) {            // low bit
-                    make_data(0);
-                } else if (tm_on_off < 2197) {	     // high bit
-                    make_data(1);
+                break;
+            case 4:	// NEC repeat
+                if (tm_on_off > 7868 && tm_on_off <= 14612) {
+                    void_cnt = 0
                 }
-                if (bits >= 32) {
-                    last_address_data = work_buff[2]+work_buff[3]*256
-                    state = 2
-                }
-            }
-            if (irType === 2) { // Panasonic
-                // Panasonic "0" 800 "1" 1600
-                if (tm_on_off < 800) {            // low bit
-                    make_data(0);
-                } else if (tm_on_off < 1560) {	     // high bit
-                    make_data(1);
-                }
-                if (bits >= 48) {
-                    last_address_data = work_buff[4]+work_buff[5]*256
-                    state = 2
-                }
-            }
-            if (irType === 3) { // SONY
-                // SONY  "0" 1200 "1" 1800
-                if (tm_duration < 1500) {            // low bit
-                    make_data(0);
-                } else if (tm_duration < 2400) {	     // high bit
-                    make_data(1);
-                }
-                if (bits >= 11) {
-                    last_address_data = work_buff[0]+work_buff[1]*256
-                    state = 2
-                }
-            }
-            if (tm_on_off > 2700) {
-                state = 3;
-				serial.writeString("OV ")
-				//serial.writeNumber(tm_on_off)
-				//serial.writeLine("")
-            }
-            void_cnt = 0
-            break;
-          case 4:	// NEC repeat
-            if (tm_on_off > 1574 && tm_on_off <= 2922 && tm_duration > 7868 && tm_duration <= 14612) {
-                // L4T=2248 1574<2922	H16T+L4T=11240	7868<14612
-                void_cnt = 0
-            }
-            break;
+                break;
         }
     }
 
 
     function enableIrDetection(pin: DigitalPin) {
         pins.setPull(pin, PinPullMode.PullNone);
-
-        pins.onPulsed(pin, PulseValue.High, () => {
-            // LOW
-            tm_now = control.micros()
-            tm_off = pins.pulseDuration()
-            tm_dur = tm_now - tm_last
-            tm_last = tm_now
-            check_pulse(tm_off, tm_dur)
-        });
+        pins.setEvents(pin, PinEventType.Edge);
     }
 
 
@@ -144,14 +140,25 @@ namespace KRC_IR {
         irType = 0			// NEC,PNASONIC,SONY
         state = 0		// 受信フェーズ 0:Leader待ち 1:ビット受信中 2:受信完了
         bits = 0			// 受信ビットカウンタ
-        tm_now = 0
-        tm_off = 0
-        tm_dur = 0
-        tm_last = 0
         clear_buff()
     }
 
-
+    control.onEvent(EventBusSource.MICROBIT_ID_IO_P2, EventBusValue.MICROBIT_PIN_EVT_FALL, function () {
+        let tm = 0
+        tm = control.eventTimestamp()
+        gPulseDuration = tm - gPulseDuration_lasttm;
+        if (gPulseDuration_lasttm > 0) {
+            check_pulse(gPulseDuration)
+        }
+        gPulseDuration_lasttm = tm
+        void_cnt = 0
+        if (pulseCnt < 128) {
+            mark[pulseCnt] = gPulseDuration
+            irstate[pulseCnt] = state
+            pulseCnt = pulseCnt + 1
+        }
+    })
+    
     /**
      * Connects to the IR receiver module at the specified pin and configures the IR protocol.
      * @param pin IR receiver pin, eg: DigitalPin.P0
@@ -173,18 +180,23 @@ namespace KRC_IR {
             let cnt = 0
             while (true) {
                 dbg_cnt = dbg_cnt + 1
-                if( state === 1 ){
-                    cnt = cnt +1
-                    if( cnt > 10 ){		//20ms*10
+                if (state === 1) {
+                    cnt = cnt + 1
+                    if (cnt > 10) {		//20ms*10
                         initIrWork();
                         serial.writeLine("TO")
                     }
-                }else{
+                } else {
                     cnt = 0
                 }
                 void_cnt = void_cnt + 1
-                if (void_cnt === 10){		//20ms*10
+                if (void_cnt === 10) {		//20ms*10
                     //void_cnt = 0
+                    state = 0;
+                    irType = 0;
+                    bits = 0;
+                    clear_buff();
+                    irstate[pulseCnt] = state
                     last_address_data = 0
                     //serial.writeLine("void")
                 }
@@ -260,8 +272,8 @@ namespace KRC_IR {
     //% weight=13
     //% blockHidden=false
     export function irAllHex(): string {
-		let str = ""
-        for (let i = (bits-1)/8; i >= 0; i--) {
+        let str = ""
+        for (let i = (bits - 1) / 8; i >= 0; i--) {
             str = str + byte2hex(work_buff[i])
         }
         return str
