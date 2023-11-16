@@ -327,7 +327,7 @@ namespace KRC_IR {
     //% blockId="ir_debug_mode
     //% block="デバッグモードを |%value に設定"
     //% weight=9
-    //% blockHidden=false
+    //% blockHidden=true
     export function IrDebugMode(value: number): void {
         gDebugMode = value
     }
