@@ -25,6 +25,7 @@ namespace KRC_IR {
     let last_address_data = 0	// 前回受信したデータ
     let void_cnt = 0		// 無操作カウンタ
     let dbg_cnt = 0
+    let gDebugMode = 0
 
     function toHexChar(decimal: number): string {
         return "0123456789ABCDEF".charAt(decimal)
@@ -32,6 +33,20 @@ namespace KRC_IR {
 
     function byte2hex(decimal: number): string {
         return toHexChar((decimal >> 4) & 15) + toHexChar(decimal & 15)
+    }
+
+    function print_irdata(): void {
+        serial.writeNumber(pulseCnt)
+        serial.writeString(": ")
+        for (let i = 0; i <= pulseCnt; i++) {
+            serial.writeNumber(i)
+            serial.writeString(" S")
+            serial.writeNumber(irstate[i])
+            serial.writeString(" ")
+            serial.writeNumber(mark[i])
+            serial.writeString(",")
+        }
+        serial.writeLine("")
     }
 
     function clear_buff(): void {
@@ -115,9 +130,11 @@ namespace KRC_IR {
                 }
                 if (tm_on_off >= 2600) {
                     state = 3;
-                    serial.writeString("OV ")
-                    //serial.writeNumber(tm_on_off)
-                    //serial.writeLine("")
+                    if (gDebugMode) {
+                        serial.writeString("OV ")
+                        //serial.writeNumber(tm_on_off)
+                        //serial.writeLine("")
+                    }
                 }
                 void_cnt = 0
                 break;
@@ -129,14 +146,23 @@ namespace KRC_IR {
         }
     }
 
-
     function enableIrDetection(pin: DigitalPin) {
         pins.setPull(pin, PinPullMode.PullNone);
         pins.setEvents(pin, PinEventType.Edge);
     }
 
-
     function initIrWork() {
+        if (gDebugMode && state ==3) {
+			print_irdata()
+            serial.writeNumber(bits)
+            serial.writeString(": ")
+            serial.writeNumber(irType)
+            serial.writeString(": ")
+            for (let i = 0; i <= 7; i++) {
+                serial.writeString(byte2hex(work_buff[i]) + " ")
+            }
+            serial.writeLine("")
+        }
         irType = 0			// NEC,PNASONIC,SONY
         state = 0		// 受信フェーズ 0:Leader待ち 1:ビット受信中 2:受信完了
         bits = 0			// 受信ビットカウンタ
@@ -184,7 +210,10 @@ namespace KRC_IR {
                     cnt = cnt + 1
                     if (cnt > 10) {		//20ms*10
                         initIrWork();
-                        serial.writeLine("TO")
+                        if (gDebugMode) {
+                            serial.writeLine("TO")
+							print_irdata()
+                        }
                     }
                 } else {
                     cnt = 0
@@ -198,7 +227,9 @@ namespace KRC_IR {
                     clear_buff();
                     irstate[pulseCnt] = state
                     last_address_data = 0
-                    //serial.writeLine("void")
+                    if (gDebugMode) {
+                        serial.writeLine("void")
+                    }
                 }
                 basic.pause(20)
             }
@@ -288,6 +319,17 @@ namespace KRC_IR {
     //% blockHidden=false
     export function irCounter(): number {
         return dbg_cnt
+    }
+
+    /**
+     * Set/Reset DEBUG mode. (DEBUG)
+     */
+    //% blockId="ir_debug_mode
+    //% block="デバッグモードを |%value に設定"
+    //% weight=9
+    //% blockHidden=false
+    export function IrDebugMode(value: number): void {
+        gDebugMode = value
     }
 
 }
