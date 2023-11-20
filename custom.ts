@@ -274,6 +274,7 @@ namespace KRC_IR {
     //% block="IR status"
     //% weight=11
     //% blockHidden=false
+    //% advanced=true
     export function irState(): number {
         return state
     }
@@ -285,6 +286,7 @@ namespace KRC_IR {
     //% block="IR_recieved_bits"
     //% weight=12
     //% blockHidden=false
+    //% advanced=true
     export function ir_recieved_bits(): number {
         return bits
     }
@@ -296,6 +298,7 @@ namespace KRC_IR {
     //% block="IR all hex"
     //% weight=13
     //% blockHidden=false
+    //% advanced=true
     export function irAllHex(): string {
         let str = ""
         for (let i = (bits - 1) / 8; i >= 0; i--) {
@@ -311,6 +314,7 @@ namespace KRC_IR {
     //% block="IR counter"
     //% weight=10
     //% blockHidden=false
+    //% advanced=true
     export function irCounter(): number {
         return dbg_cnt
     }
@@ -322,6 +326,7 @@ namespace KRC_IR {
     //% block="デバッグモードを |%value に設定"
     //% weight=9
     //% blockHidden=false
+    //% advanced=true
     export function IrDebugMode(value: number): void {
         gDebugMode = value
     }
