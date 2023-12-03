@@ -176,7 +176,7 @@ namespace KRC_IR {
             check_pulse(gPulseDuration)
         }
         gPulseDuration_lasttm = tm
-        //void_cnt = 0
+        void_cnt = 0
         if (pulseCnt < 128) {
             mark[pulseCnt] = gPulseDuration
             irstate[pulseCnt] = state
