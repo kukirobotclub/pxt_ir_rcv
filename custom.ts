@@ -13,19 +13,20 @@
 //% weight=100 color=#bc0f11 icon="\uf09e"
 namespace KRC_IR {
 
-    let mark: number[] = []
-    let irstate: number[] = []
-    let gPulseDuration = 0
-    let gPulseDuration_lasttm = 0
-    let pulseCnt = 0
+    let mark: number[] = []		// debug mode
+    let irstate: number[] = []		// debug mode
+    let evtTime: number[] = []	// debug mode
+    let pulseCnt = 0		// debug mode
+    let gPulseDuration = 0			// パルス期間
+    let gPulseDuration_lasttm = 0	// 前回パルスのタイムスタンプ
     let irType = 0			// NEC,PNASONIC,SONY
     let state = 0		// 受信フェーズ 0:Leader待ち 1:ビット受信中 2:受信完了
     let bits = 0			// 受信ビットカウンタ
-    let work_buff: number[] = []
-    let last_address_data = 0	// 前回受信したデータ
+    let work_buff: number[] = []	// 組み立てバッファ
+    let last_address_data = 0	// 受信したデータ(完成した時点で更新)
     let void_cnt = 0		// 無操作カウンタ
     let dbg_cnt = 0
-    let gDebugMode = 0
+    let gDebugMode = 0		// debug mode
 
     function toHexChar(decimal: number): string {
         return "0123456789ABCDEF".charAt(decimal)
@@ -40,6 +41,8 @@ namespace KRC_IR {
         serial.writeString(": ")
         for (let i = 0; i <= pulseCnt; i++) {
             serial.writeNumber(i)
+            serial.writeString(" ")
+            serial.writeNumber(evtTime[i])
             serial.writeString(" S")
             serial.writeNumber(irstate[i])
             serial.writeString(" ")
@@ -180,6 +183,7 @@ namespace KRC_IR {
         if (pulseCnt < 128) {
             mark[pulseCnt] = gPulseDuration
             irstate[pulseCnt] = state
+            evtTime[pulseCnt] = input.runningTimeMicros()
             pulseCnt = pulseCnt + 1
         }
     })
@@ -212,7 +216,10 @@ namespace KRC_IR {
                 if (state > 0) {
                     void_cnt = void_cnt + 1
                     if (void_cnt >= 10) {		//20ms*10
+                        mark[pulseCnt] = -1
                         irstate[pulseCnt] = state
+                        evtTime[pulseCnt] = input.runningTimeMicros()
+                        pulseCnt = pulseCnt + 1
                         last_address_data = 0
                         //void_cnt = 0
                         initIrWork();
@@ -230,6 +237,15 @@ namespace KRC_IR {
         })
     }
 
+    /**
+     * Clear the buffered IR data.
+     */
+    //% blockId=ir_recieved_clear
+    //% block="IRクリア"			//"IR data clear
+    //% weight=70
+    export function irClear(): void {
+        initIrWork();
+    }
 
     /**
      * Returns the IR ddress-command as 16-bit binary.
