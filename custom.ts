@@ -347,4 +347,15 @@ namespace KRC_IR {
         gDebugMode = value
     }
 
+    /**
+     * Print debug status. (DEBUG)
+     */
+    //% blockId="ir_debug_print
+    //% block="デバッグ情報シリアルに出力"
+    //% weight=8
+    //% blockHidden=true
+    //% advanced=true
+    export function IrDebugPrint(): void {
+        print_irdata()
+    }
 }
