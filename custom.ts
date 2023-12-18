@@ -9,6 +9,7 @@
  * Version 2022-07-22 1.01 バイトオーダー変更
  * Version 2022-07-25 1.02 void_cnt=0の場所変更、シリアル出力を全部コメント
  * Version 2023-11-16 2.00 検知ロジック変更onEvent
+ * Version 2023-12-16 3.00 データ渡し方法の変更
  */
 //% weight=100 color=#bc0f11 icon="\uf09e"
 namespace KRC_IR {
@@ -20,10 +21,12 @@ namespace KRC_IR {
     let gPulseDuration = 0			// パルス期間
     let gPulseDuration_lasttm = 0	// 前回パルスのタイムスタンプ
     let irType = 0			// NEC,PNASONIC,SONY
-    let state = 0		// 受信フェーズ 0:Leader待ち 1:ビット受信中 2:受信完了
+    let state = 0		// 受信フェーズ 0:Leader待ち 1:NECビット受信中 2:Panasonicビット受信中 3:SONYビット受信中
     let bits = 0			// 受信ビットカウンタ
     let work_buff: number[] = []	// 組み立てバッファ
-    let last_address_data = 0	// 受信したデータ(完成した時点で更新)
+    let ir_data = 0	     // 受信したデータ(完成した時点で更新)
+    let last_ir_data = 0 // リピート対象のデータ
+    let ir_repeat = 0    // 1:Repeat受信
     let void_cnt = 0		// 無操作カウンタ
     let dbg_cnt = 0
     let gDebugMode = 0		// debug mode
@@ -36,7 +39,7 @@ namespace KRC_IR {
         return toHexChar((decimal >> 4) & 15) + toHexChar(decimal & 15)
     }
 
-    function print_irdata(): void {
+    function print_irdata_debug(): void {
         serial.writeNumber(pulseCnt)
         serial.writeString(": ")
         for (let i = 0; i <= pulseCnt; i++) {
@@ -51,6 +54,18 @@ namespace KRC_IR {
         }
         serial.writeLine("")
         pulseCnt = 0
+    }
+
+    function print_irdata(): void {
+        serial.writeString("[ ")
+        serial.writeNumber(bits)
+        serial.writeString(": ")
+        serial.writeNumber(irType)
+        serial.writeString(": ")
+        for (let i = 0; i <= 7; i++) {
+            serial.writeString(byte2hex(work_buff[i]) + " ")
+        }
+        serial.writeLine("]")
     }
 
     function clear_buff(): void {
@@ -75,74 +90,90 @@ namespace KRC_IR {
             case 0:	// Leader
                 if (tm_on_off >= 2600 && tm_on_off <= 4100) {
                     irType = 3;	//SONY
-                    state = 1;
+                    state = 3;
                 }
                 if (tm_on_off > 4100 && tm_on_off <= 6000) {
                     irType = 2;	//Panasonic
-                    state = 1;
+                    state = 2;
                 }
                 if (tm_on_off > 6000 && tm_on_off <= 8000) {
                     irType = 2;	//Panasonic Repeat	殆ど使われないということ
-                    state = 4;
+                    ir_data = last_ir_data
+                    ir_repeat = 1	//repeat
+                    state = 0
                 }
                 if (tm_on_off > 8000 && tm_on_off <= 11240) {
                     irType = 1;	//NEC
-                    state = 4;	//repeat
+                    ir_data = last_ir_data
+                    ir_repeat = 1	//repeat
+                    state = 0
                 }
                 if (tm_on_off > 11240 && tm_on_off <= 15736) {
                     irType = 1;	//NEC
                     state = 1;
                 }
                 break;
-            case 1:	// reciving bit
-                if (irType === 1) { // NEC
-                    // NEC
-                    if (tm_on_off < 1686) {            // low bit
-                        make_data(0);
-                    } else if (tm_on_off < 2600) {	     // high bit
-                        make_data(1);
-                    }
-                    if (bits >= 32) {
-                        last_address_data = work_buff[2] + work_buff[3] * 256
-                        state = 2
-                    }
-                }
-                if (irType === 2) { // Panasonic
-                    // Panasonic
-                    if (tm_on_off < 1200) {            // low bit
-                        make_data(0);
-                    } else if (tm_on_off < 2200) {	     // high bit
-                        make_data(1);
-                    }
-                    if (bits >= 48) {
-                        last_address_data = work_buff[4] + work_buff[5] * 256
-                        state = 2
-                    }
-                }
-                if (irType === 3) { // SONY
-                    // SONY  "0" 1200 "1" 1800
-                    if (tm_on_off < 1500) {            // low bit
-                        make_data(0);
-                    } else if (tm_on_off < 2400) {	     // high bit
-                        make_data(1);
-                    }
-                    if (bits >= 11) {
-                        last_address_data = work_buff[0] + work_buff[1] * 256
-                        state = 2
-                    }
-                }
-                if (tm_on_off >= 2600) {
-                    state = 3;
+            case 1:	// reciving bit NEC
+                // NEC
+                if (tm_on_off < 1686) {            // low bit
+                    make_data(0);
+                } else if (tm_on_off < 2600) {	     // high bit
+                    make_data(1);
+                } else {
+                    initIrWork()
                     if (gDebugMode) {
                         serial.writeString("OV ")
-                        //serial.writeNumber(tm_on_off)
-                        //serial.writeLine("")
                     }
                 }
+                if (bits >= 32) {
+                    ir_data = work_buff[2] + work_buff[3] * 256
+                    last_ir_data = ir_data
+                    if (gDebugMode) {
+                        print_irdata()
+                    }
+                    initIrWork()
+                }
                 break;
-            case 4:	// NEC repeat
-                if (tm_on_off > 7868 && tm_on_off <= 14612) {
-                    void_cnt = 0
+            case 2:	// reciving bit Panasonic
+                // Panasonic
+                if (tm_on_off < 1200) {            // low bit
+                    make_data(0);
+                } else if (tm_on_off < 2200) {	     // high bit
+                    make_data(1);
+                } else {
+                    initIrWork()
+                    if (gDebugMode) {
+                        serial.writeString("OV ")
+                    }
+                }
+                if (bits >= 48) {
+                    ir_data = work_buff[4] + work_buff[5] * 256
+                    last_ir_data = ir_data
+                    if (gDebugMode) {
+                        print_irdata()
+                    }
+                    initIrWork()
+                }
+                break;
+            case 3:	// reciving bit  SONY
+                // SONY  "0" 1200 "1" 1800
+                if (tm_on_off < 1500) {            // low bit
+                    make_data(0);
+                } else if (tm_on_off < 2400) {	     // high bit
+                    make_data(1);
+                } else {
+                    initIrWork()
+                    if (gDebugMode) {
+                        serial.writeString("OV ")
+                    }
+                }
+                if (bits >= 11) {
+                    ir_data = work_buff[0] + work_buff[1] * 256
+                    last_ir_data = ir_data
+                    if (gDebugMode) {
+                        print_irdata()
+                    }
+                    initIrWork()
                 }
                 break;
         }
@@ -154,19 +185,7 @@ namespace KRC_IR {
     }
 
     function initIrWork() {
-        if (gDebugMode && state >= 2) {
-			print_irdata()
-            serial.writeNumber(bits)
-            serial.writeString(": ")
-            serial.writeNumber(irType)
-            serial.writeString(": ")
-            for (let i = 0; i <= 7; i++) {
-                serial.writeString(byte2hex(work_buff[i]) + " ")
-            }
-            serial.writeLine("")
-        }
-        irType = 0			// NEC,PNASONIC,SONY
-        state = 0		// 受信フェーズ 0:Leader待ち 1:ビット受信中 2:受信完了
+        state = 0		// 受信フェーズ 0:Leader待ち 1:ビット受信中
         bits = 0			// 受信ビットカウンタ
         clear_buff()
     }
@@ -205,6 +224,7 @@ namespace KRC_IR {
         for (let i = 0; i < 128; i++) {
             mark[i] = 0
             irstate[i] = 0
+            evtTime[i] = 0
         }
 
         initIrWork();
@@ -213,23 +233,22 @@ namespace KRC_IR {
         control.inBackground(() => {
             while (true) {
                 dbg_cnt = dbg_cnt + 1
-                if (state > 0) {
+                if (ir_data != 0 || state > 0) {
                     void_cnt = void_cnt + 1
                     if (void_cnt >= 10) {		//20ms*10
                         mark[pulseCnt] = -1
                         irstate[pulseCnt] = state
                         evtTime[pulseCnt] = input.runningTimeMicros()
                         pulseCnt = pulseCnt + 1
-                        last_address_data = 0
-                        //void_cnt = 0
-                        initIrWork();
-                        state = 0;
-                        irType = 0;
-                        bits = 0;
-                        clear_buff();
+                        ir_data = 0
+                        last_ir_data = 0
+                        ir_repeat = 0
                         if (gDebugMode) {
                             serial.writeLine("TO")
+                            print_irdata_debug()
                         }
+                        irType = 0			// NEC,PNASONIC,SONY
+                        initIrWork();
                     }
                 }
                 basic.pause(20)
@@ -244,6 +263,10 @@ namespace KRC_IR {
     //% block="IRクリア"			//"IR data clear
     //% weight=70
     export function irClear(): void {
+        ir_data = 0
+        last_ir_data = 0
+        ir_repeat = 0
+        irType = 0			// NEC,PNASONIC,SONY
         initIrWork();
     }
 
@@ -254,8 +277,10 @@ namespace KRC_IR {
     //% block="IRデータ"			//"IR address command"
     //% weight=71
     export function irAddressCommand(): number {
-        initIrWork();
-        return last_address_data
+        let ret = ir_data
+        ir_data = 0
+        ir_repeat = 0
+        return ret
     }
 
     /**
@@ -265,8 +290,10 @@ namespace KRC_IR {
     //% block="IRコマンド"		//"IR command"
     //% weight=72
     export function irCommand(): number {
-        initIrWork();
-        return (last_address_data & 255)
+        let ret = (ir_data & 255)
+        ir_data = 0
+        ir_repeat = 0
+        return ret
     }
 
     /**
@@ -276,7 +303,21 @@ namespace KRC_IR {
     //% block="IR受信？"		//"IR data was received"
     //% weight=80
     export function irDataReceived(): boolean {
-        if (state >= 2) {
+        if (ir_data != 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Returns repeat code.
+     */
+    //% blockId=repeat_received
+    //% block="Repeat受信？"
+    //% weight=81
+    export function repeatReceived(): boolean {
+        if (ir_repeat != 0) {
             return true;
         } else {
             return false;
@@ -357,5 +398,7 @@ namespace KRC_IR {
     //% advanced=true
     export function IrDebugPrint(): void {
         print_irdata()
+        print_irdata_debug()
     }
+
 }
